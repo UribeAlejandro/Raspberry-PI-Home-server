@@ -35,9 +35,9 @@ services:
     environment:
       - TZ=America/Argentina/Buenos_Aires
     volumes:
-      - ./tmp/database:/config
-      - ./tmp/transcode:/transcode
-      - ./tmp/media:/data
+      - ./database:/config
+      - ./transcode:/transcode
+      - ./media:/data
     restart: unless-stopped
     env_file:
       - .env
