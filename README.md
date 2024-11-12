@@ -16,6 +16,12 @@ sh install.sh
 
 Wait for the Raspberry Pi to reboot.
 
+Create the required networks for docker:
+
+```bash
+docker network create -d macvlan -o parent=eth0 --subnet=192.168.1.0/24 --gateway=192.168.1.1 --ip-range=192.168.1.198/32 ph_network
+```
+
 Clone this repository to the Raspberry Pi:
 
 ```bash
