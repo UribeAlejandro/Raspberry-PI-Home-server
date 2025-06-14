@@ -1,0 +1,75 @@
+networks:
+  homelab:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/24
+          gateway: 172.25.0.1
+
+services:
+  pihole:
+    hostname: pihole
+    container_name: pihole
+    image: pihole/pihole:latest
+    depends_on: [ unbound ]
+    ports:
+      # DNS Ports
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Default HTTP Port
+      - "80:80/tcp"
+      # Default HTTPs Port. FTL will generate a self-signed certificate
+      - "443:443/tcp"
+      # Uncomment the line below if you are using Pi-hole as your DHCP server
+      #- "67:67/udp"
+      # Uncomment the line below if you are using Pi-hole as your NTP server
+      #- "123:123/udp"
+    environment:
+      TZ: ${TZ}
+      FTLCONF_webserver_api_password: ${PASSWORD}
+      PIHOLE_UID: 1000
+      PIHOLE_GID: 1000
+      TAIL_FTL_LOG: 1
+      FTLCONF_dns_upstreams: 172.25.0.25#53;172.25.0.25#53
+    volumes:
+      - ${SERVICES_ROOT}/etc-pihole:/etc/pihole'
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
+      - SYS_NICE
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    volumes:
+      - ${SERVICES_ROOT}/redis:/data
+    healthcheck:
+      test: "[ $$(redis-cli ping) = 'PONG' ]"
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    networks:
+      - homelab
+
+  unbound:
+    hostname: unbound
+    container_name: unbound
+    image: klutchell/unbound:latest
+    restart: unless-stopped
+    depends_on: [ redis ]
+    ports:
+      - 5454:53/udp
+      - 5454:53/tcp
+    volumes:
+      - ${SERVICES_ROOT}/unbound/custom.conf.d:/etc/unbound/custom.conf.d:ro
+    networks:
+      homelab:
+        ipv4_address: 172.25.0.25

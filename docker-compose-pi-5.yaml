@@ -1,0 +1,401 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+
+services:
+  adguardhome:
+    hostname: adguardhome
+    container_name: adguardhome
+    image: adguard/adguardhome:latest
+    depends_on: [ unbound ]
+    ports:
+      # Plain DNS
+      - '53:53/tcp'
+      - '53:53/udp'
+      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
+      - '80:80/tcp'
+      - '443:443/tcp'
+      - '443:443/udp'
+      - '3000:3000/tcp'
+      # DNS-over-TLS
+      - '853:853/tcp'
+      # DNS-over-QUIC
+      - '784:784/udp'
+      - '853:853/udp'
+      - '8853:8853/udp'
+      # DNSCrypt
+      - '5443:5443/tcp'
+      - '5443:5443/udp'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SERVICES_ROOT}/adguardhome/work:/opt/adguardhome/work'
+      - ${SERVICES_ROOT}/adguardhome/config:/opt/adguardhome/conf
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    restart: unless-stopped
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.253
+      homelab:
+
+
+  adguardhome-sync:
+    image: ghcr.io/bakito/adguardhome-sync
+    container_name: adguardhome-sync
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+      LOG_LEVEL: info
+      ORIGIN_URL: http://192.168.1.253
+      ORIGIN_USERNAME: ${USERNAME}
+      ORIGIN_PASSWORD: ${PASSWORD}
+      CRON: "0 * 1 * *"
+    volumes:
+      - ${SERVICES_ROOT}/adguardhome-sync/config:/config
+    depends_on: [ adguardhome ]
+    restart: unless-stopped
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.252
+      homelab:
+
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    volumes:
+      - ${SERVICES_ROOT}/redis:/data
+    healthcheck:
+      test: "[ $$(redis-cli ping) = 'PONG' ]"
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    networks:
+      - homelab
+
+  unbound:
+    hostname: unbound
+    container_name: unbound
+    image: klutchell/unbound:latest
+    restart: unless-stopped
+    depends_on: [ redis ]
+    ports:
+      - 5454:53/udp
+      - 5454:53/tcp
+    volumes:
+      - ${SERVICES_ROOT}/unbound/custom.conf.d:/etc/unbound/custom.conf.d:ro
+    networks:
+      homelab:
+        ipv4_address: 172.25.0.25
+
+  portainer:
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SERVICES_ROOT}/portainer:/data
+    networks:
+      - homelab
+
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    hostname: plex-server-home
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      TZ: ${TZ}
+      ALLOWED_NETWORKS: 192.168.1.0/24
+    volumes:
+      - ${SERVICES_ROOT}/plex/config:/config
+      - ${SERVICES_ROOT}/plex/transcode:/transcode
+      - /mnt/Movies/Movies:/movies
+      - /mnt/Series/Series:/tv
+    depends_on: [ portainer ]
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.254
+      homelab:
+
+
+  homepage:
+    hostname: homepage
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PORT: 80
+      LOG_LEVEL: info
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.200
+    volumes:
+      - ${SERVICES_ROOT}/homepage/config:/app/config:rw
+      - /mnt/Movies:/mnt/Movies:ro
+      - /mnt/Series:/mnt/Series:ro
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.200
+      homelab:
+
+
+  speedtest-tracker:
+    hostname: internetspeed
+    container_name: speedtest
+    restart: unless-stopped
+    image: lscr.io/linuxserver/speedtest-tracker
+    ports:
+      - 8080:80
+      - 8443:443
+    environment:
+      PUID: 1000
+      PGID: 1000
+      APP_NAME: Compumundo
+      APP_TIMEZONE: ${TZ}
+      DISPLAY_TIMEZONE: ${TZ}
+      APP_KEY: ${SPEEDTEST_TRACKER_APP_KEY}
+      DB_CONNECTION: sqlite
+      PUBLIC_DASHBOARD: true
+      PRUNE_RESULTS_OLDER_THAN: 31
+      SPEEDTEST_SCHEDULE: "*/30 * * * *"
+    volumes:
+      - ${SERVICES_ROOT}/speedtest-tracker:/config
+    healthcheck:
+      test: curl -fSs https://speedtest.example.com/api/healthcheck | jq -r .message || exit 1
+      interval: 10s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.201
+      homelab:
+
+
+  transmission:
+    image: haugene/transmission-openvpn:latest
+    hostname: transmission
+    container_name: transmission
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - CHOWN
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: ${TZ}
+      # Nordvpn
+      NORDVPN_COUNTRY: ${NORDVPN_COUNTRY}
+      NORDVPN_CATEGORY: ${NORDVPN_CATEGORY}
+      # Openvpn
+      OPENVPN_PROVIDER: ${OPENVPN_PROVIDER}
+      OPENVPN_USERNAME: ${OPENVPN_USERNAME}
+      OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
+      # Transmission
+      TRANSMISSION_RPC_USERNAME: ${USERNAME}
+      TRANSMISSION_RPC_PASSWORD: ${PASSWORD}
+      TRANSMISSION_RPC_PORT: 9091
+      TRANSMISSION_WATCH_DIR: /data
+      TRANSMISSION_DOWNLOAD_DIR: /data
+      TRANSMISSION_INCOMPLETE_DIR: /data
+      TRANSMISSION_WATCH_DIR_ENABLED: false
+      TRANSMISSION_RPC_AUTHENTICATION_REQUIRED: true
+      TRANSMISSION_WEB_UI: transmission-web-control
+      # Other settings
+      SELFHEAL: true
+      HEALTH_CHECK_HOST: google.com
+      CREATE_TUN_DEVICE: true
+      GLOBAL_APPLY_PERMISSION: true
+      LOCAL_NETWORK: 192.168.0.0/16
+      OPENVPN_OPTS: --inactive 3600 --ping 10 --ping-exit 60
+    volumes:
+      - ${SERVICES_ROOT}/transmission-openvpn:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt:/data
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    networks:
+      - homelab
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:v3.3.22
+    hostname: flaresolverr
+    container_name: flaresolverr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      LANG: en_GB
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ${SERVICES_ROOT}/flaresolverr:/config
+    ports:
+      - 8191:8191
+    networks:
+      - homelab
+
+  jackett:
+    image: linuxserver/jackett:latest
+    hostname: jackett
+    container_name: jackett
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+      AUTO_UPDATE: true
+    volumes:
+      - /mnt:/downloads
+      - ${SERVICES_ROOT}/Jackett:/config
+    ports:
+      - 9117:9117
+    networks:
+      - homelab
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    hostname: sonarr
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - /mnt:/downloads
+      - /mnt/Series/Series:/tv
+      - ${SERVICES_ROOT}/Sonarr:/config
+    ports:
+      - 8989:8989
+    depends_on: [ transmission, jackett, prowlarr ]
+    networks:
+      - homelab
+
+  radarr:
+    image: linuxserver/radarr:latest
+    hostname: radarr
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+    volumes:
+      - /mnt:/downloads
+      - /mnt/Movies/Movies:/movies
+      - ${SERVICES_ROOT}/radarr/config:/config
+    ports:
+      - 7878:7878
+    depends_on: [ transmission, jackett, prowlarr ]
+    networks:
+      - homelab
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    hostname: prowlarr
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+    volumes:
+      - ${SERVICES_ROOT}/prowlarr:/config
+    ports:
+      - 9696:9696
+    depends_on: [ flaresolverr, transmission ]
+    networks:
+      - homelab
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    hostname: bazarr
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+    volumes:
+      - /mnt/Series/Series:/tv
+      - /mnt/Movies/Movies:/movies
+      - ${SERVICES_ROOT}/Bazarr:/config
+    ports:
+      - 6767:6767
+    depends_on: [ sonarr, radarr ]
+    networks:
+      - homelab
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    hostname: overseerr
+    container_name: overseerr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: 1000
+      PGID: 1000
+    volumes:
+      - ${SERVICES_ROOT}/Overseerr:/config
+    ports:
+      - 5055:5055
+    depends_on: [ sonarr, radarr, bazarr, plex ]
+    networks:
+      - homelab
+
+  samba:
+    image: dperson/samba:latest
+    container_name: samba
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      USERID: 1000
+      GROUPID: 1000
+      PERMISSIONS: true
+      USER: ${USERNAME};${PASSWORD}
+      SHARE: Media;/Media;yes;no;yes;${USERNAME}
+    ports:
+      - 139:139
+      - 445:445
+    volumes:
+      - /mnt:/Media
+    networks:
+      - homelab
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    hostname: n8n
+    environment:
+      TZ: ${TZ}
+      GENERIC_TIMEZONE: ${TZ}
+      N8N_SECURE_COOKIE: false
+    ports:
+      - 5678:5678
+    volumes:
+      - ${SERVICES_ROOT}/n8n:/home/node/.n8n
+    networks:
+      - homelab
