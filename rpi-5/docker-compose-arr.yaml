@@ -1,0 +1,206 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+
+services:
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    hostname: plex-server-home
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    environment:
+      TZ: ${TZ}
+      ALLOWED_NETWORKS: 192.168.1.0/24
+    volumes:
+      - ${SERVICES_ROOT}/plex/config:/config
+      - ${SERVICES_ROOT}/plex/transcode:/transcode
+      - /mnt/Movies/Movies:/movies
+      - /mnt/Series/Series:/tv
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.254
+      homelab:
+  transmission:
+    image: haugene/transmission-openvpn:latest
+    hostname: transmission
+    container_name: transmission
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - CHOWN
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      # Nordvpn
+      NORDVPN_COUNTRY: ${NORDVPN_COUNTRY}
+      NORDVPN_CATEGORY: ${NORDVPN_CATEGORY}
+      # Openvpn
+      OPENVPN_PROVIDER: ${OPENVPN_PROVIDER}
+      OPENVPN_USERNAME: ${OPENVPN_USERNAME}
+      OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
+      # Transmission
+      TRANSMISSION_RPC_USERNAME: ${USERNAME}
+      TRANSMISSION_RPC_PASSWORD: ${PASSWORD}
+      TRANSMISSION_RPC_PORT: 9091
+      TRANSMISSION_WATCH_DIR: /data
+      TRANSMISSION_DOWNLOAD_DIR: /data
+      TRANSMISSION_INCOMPLETE_DIR: /data
+      TRANSMISSION_WATCH_DIR_ENABLED: false
+      TRANSMISSION_RPC_AUTHENTICATION_REQUIRED: true
+      TRANSMISSION_WEB_UI: transmission-web-control
+      # Other settings
+      SELFHEAL: true
+      HEALTH_CHECK_HOST: google.com
+      CREATE_TUN_DEVICE: true
+      GLOBAL_APPLY_PERMISSION: true
+      LOCAL_NETWORK: 192.168.0.0/16
+      OPENVPN_OPTS: --inactive 3600 --ping 10 --ping-exit 60
+    volumes:
+      - ${SERVICES_ROOT}/transmission-openvpn:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt:/data
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    networks:
+      - homelab
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    hostname: flaresolverr
+    container_name: flaresolverr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      LANG: en_GB
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ${SERVICES_ROOT}/flaresolverr:/config
+    ports:
+      - 8191:8191
+    networks:
+      - homelab
+
+  jackett:
+    image: linuxserver/jackett:latest
+    hostname: jackett
+    container_name: jackett
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      AUTO_UPDATE: true
+    volumes:
+      - /mnt:/downloads
+      - ${SERVICES_ROOT}/Jackett:/config
+    ports:
+      - 9117:9117
+    networks:
+      - homelab
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    hostname: sonarr
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - /mnt:/downloads
+      - /mnt/Series/Series:/tv
+      - ${SERVICES_ROOT}/Sonarr:/config
+    ports:
+      - 8989:8989
+    depends_on: [ transmission, jackett, prowlarr ]
+    networks:
+      - homelab
+
+  radarr:
+    image: linuxserver/radarr:latest
+    hostname: radarr
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - /mnt:/downloads
+      - /mnt/Movies/Movies:/movies
+      - ${SERVICES_ROOT}/radarr/config:/config
+    ports:
+      - 7878:7878
+    depends_on: [ transmission, jackett, prowlarr ]
+    networks:
+      - homelab
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    hostname: prowlarr
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - ${SERVICES_ROOT}/prowlarr:/config
+    ports:
+      - 9696:9696
+    depends_on: [ flaresolverr, transmission ]
+    networks:
+      - homelab
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    hostname: bazarr
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - /mnt/Series/Series:/tv
+      - /mnt/Movies/Movies:/movies
+      - ${SERVICES_ROOT}/Bazarr:/config
+    ports:
+      - 6767:6767
+    depends_on: [ sonarr, radarr ]
+    networks:
+      - homelab
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    hostname: overseerr
+    container_name: overseerr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - ${SERVICES_ROOT}/Overseerr:/config
+    ports:
+      - 5055:5055
+    depends_on: [ sonarr, radarr, bazarr, plex ]
+    networks:
+      - homelab

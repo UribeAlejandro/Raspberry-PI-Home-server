@@ -1,0 +1,75 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+
+services:
+  adguardhome:
+    hostname: adguardhome
+    container_name: adguardhome
+    image: adguard/adguardhome:latest
+    ports:
+      # Plain DNS
+      - 53:53/tcp
+      - 53:53/udp
+      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
+      - 80:80/tcp
+      - 443:443/tcp
+      - 443:443/udp
+      - 2000:3000/tcp
+      # DNS-over-TLS
+      - 853:853/tcp
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${SERVICES_ROOT}/adguardhome/work:/opt/adguardhome/work
+      - ${SERVICES_ROOT}/adguardhome/config:/opt/adguardhome/conf
+    privileged: true
+    restart: unless-stopped
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.253
+      homelab:
+
+
+  adguardhome-sync:
+    image: ghcr.io/bakito/adguardhome-sync
+    container_name: adguardhome-sync
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      LOG_LEVEL: info
+      ORIGIN_URL: http://192.168.1.253
+      ORIGIN_USERNAME: ${USERNAME}
+      ORIGIN_PASSWORD: ${PASSWORD}
+      CRON: "0 * 1 * *"
+    volumes:
+      - ${SERVICES_ROOT}/adguardhome-sync/config:/config
+    depends_on: [ adguardhome ]
+    restart: unless-stopped
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.252
+      homelab:
+
+
+  unbound:
+    # See https://github.com/kaczmar2/pihole-unbound/tree/main
+    container_name: unbound
+    image: mvance/unbound-rpi:latest
+    network_mode: service:adguardhome
+    volumes:
+      - ./unbound/config/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
+      # custom config (unbound.conf.d/your-config.conf). unbound.conf includes these via wilcard include
+      - ./unbound/config/unbound.conf.d:/opt/unbound/etc/unbound/unbound.conf.d:ro
+      # log file
+      - ./unbound/logs/unbound.log:/opt/unbound/etc/unbound/unbound.log
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    post_start:
+      # remove unused config files
+      - command: rm -f /opt/unbound/etc/unbound/a-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/forward-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/srv-records.conf

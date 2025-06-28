@@ -27,14 +27,15 @@ services:
     environment:
       TZ: ${TZ}
       FTLCONF_webserver_api_password: ${PASSWORD}
-      PIHOLE_UID: 1000
-      PIHOLE_GID: 1000
+      PIHOLE_UID: ${PUID}
+      PIHOLE_GID: ${PGID}
       TAIL_FTL_LOG: 1
-      FTLCONF_dns_upstreams: 127.0.0.1#5335;192.168.1.253#53
+      FTLCONF_dns_upstreams: 127.0.0.1#5335
       FTLCONF_dns_listeningMode: 'all'
       FTLCONF_ntp_ipv4_active: ${NTP_IPV4_ACTIVE:-true}
       FTLCONF_ntp_ipv6_active: ${NTP_IPV6_ACTIVE:-true}
       FTLCONF_ntp_sync_active: ${NTP_IPV6_ACTIVE:-true}
+      FTLCONF_dns_cache_size: 0
     volumes:
       - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
     cap_add:
