@@ -12,7 +12,6 @@ services:
     hostname: pihole
     container_name: pihole
     image: pihole/pihole:latest
-    depends_on: [ unbound ]
     ports:
       # DNS Ports
       - "53:53/tcp"
@@ -31,45 +30,35 @@ services:
       PIHOLE_UID: 1000
       PIHOLE_GID: 1000
       TAIL_FTL_LOG: 1
-      FTLCONF_dns_upstreams: 172.25.0.25#53;172.25.0.25#53
+      FTLCONF_dns_upstreams: 127.0.0.1#5335;192.168.1.253#53
+      FTLCONF_dns_listeningMode: 'all'
+      FTLCONF_ntp_ipv4_active: ${NTP_IPV4_ACTIVE:-true}
+      FTLCONF_ntp_ipv6_active: ${NTP_IPV6_ACTIVE:-true}
+      FTLCONF_ntp_sync_active: ${NTP_IPV6_ACTIVE:-true}
     volumes:
-      - ${SERVICES_ROOT}/etc-pihole:/etc/pihole'
+      - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
     cap_add:
-      - NET_ADMIN
-      - SYS_TIME
       - SYS_NICE
     privileged: true
     restart: unless-stopped
     networks:
       - homelab
 
-  redis:
-    image: redis:latest
-    container_name: redis
-    hostname: redis
-    restart: unless-stopped
-    volumes:
-      - ${SERVICES_ROOT}/redis:/data
-    healthcheck:
-      test: "[ $$(redis-cli ping) = 'PONG' ]"
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
-    networks:
-      - homelab
-
   unbound:
-    hostname: unbound
     container_name: unbound
-    image: klutchell/unbound:latest
-    restart: unless-stopped
-    depends_on: [ redis ]
-    ports:
-      - 5454:53/udp
-      - 5454:53/tcp
+    image: mvance/unbound-rpi:latest # Change to use 'mvance/unbound-rpi:latest' on raspberry pi
+    # use pihole network stack
+    network_mode: service:pihole
     volumes:
-      - ${SERVICES_ROOT}/unbound/custom.conf.d:/etc/unbound/custom.conf.d:ro
-    networks:
-      homelab:
-        ipv4_address: 172.25.0.25
+      # main config
+      - ${SERVICES_ROOT}/unbound/config/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
+      # custom config (unbound.conf.d/your-config.conf). unbound.conf includes these via wilcard include
+      - ${SERVICES_ROOT}/unbound/config/unbound.conf.d:/opt/unbound/etc/unbound/unbound.conf.d:ro
+      # log file
+      - ${SERVICES_ROOT}/unbound/logs/unbound.log:/opt/unbound/etc/unbound/unbound.log
+    restart: unless-stopped
+    post_start:
+      # remove unused config files
+      - command: rm -f /opt/unbound/etc/unbound/a-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/forward-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/srv-records.conf

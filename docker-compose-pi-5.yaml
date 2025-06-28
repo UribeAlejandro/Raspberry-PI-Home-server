@@ -9,7 +9,6 @@ services:
     hostname: adguardhome
     container_name: adguardhome
     image: adguard/adguardhome:latest
-    depends_on: [ unbound ]
     ports:
       # Plain DNS
       - '53:53/tcp'
@@ -64,36 +63,25 @@ services:
       homelab:
 
 
-  redis:
-    image: redis:latest
-    container_name: redis
-    hostname: redis
-    restart: unless-stopped
-    volumes:
-      - ${SERVICES_ROOT}/redis:/data
-    healthcheck:
-      test: "[ $$(redis-cli ping) = 'PONG' ]"
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
-    networks:
-      - homelab
-
   unbound:
-    hostname: unbound
+    # See https://github.com/kaczmar2/pihole-unbound/tree/main
     container_name: unbound
-    image: klutchell/unbound:latest
-    restart: unless-stopped
-    depends_on: [ redis ]
-    ports:
-      - 5454:53/udp
-      - 5454:53/tcp
+    image: mvance/unbound-rpi:latest
+    network_mode: service:adguardhome
     volumes:
-      - ${SERVICES_ROOT}/unbound/custom.conf.d:/etc/unbound/custom.conf.d:ro
-    networks:
-      homelab:
-        ipv4_address: 172.25.0.25
+      - ${SERVICES_ROOT}/unbound/config/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
+      # custom config (unbound.conf.d/your-config.conf). unbound.conf includes these via wilcard include
+      - ${SERVICES_ROOT}/unbound/config/unbound.conf.d:/opt/unbound/etc/unbound/unbound.conf.d:ro
+      # log file
+      - ${SERVICES_ROOT}/unbound/logs/unbound.log:/opt/unbound/etc/unbound/unbound.log
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    post_start:
+      # remove unused config files
+      - command: rm -f /opt/unbound/etc/unbound/a-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/forward-records.conf
+      - command: rm -f /opt/unbound/etc/unbound/srv-records.conf
 
   portainer:
     hostname: portainer
@@ -163,7 +151,7 @@ services:
     hostname: internetspeed
     container_name: speedtest
     restart: unless-stopped
-    image: lscr.io/linuxserver/speedtest-tracker
+    image: lscr.io/linuxserver/speedtest-tracker:latest
     ports:
       - 8080:80
       - 8443:443
@@ -241,7 +229,7 @@ services:
       - homelab
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:v3.3.22
+    image: ghcr.io/flaresolverr/flaresolverr:latest
     hostname: flaresolverr
     container_name: flaresolverr
     restart: unless-stopped
@@ -366,21 +354,18 @@ services:
       - homelab
 
   samba:
-    image: dperson/samba:latest
+    image: dockurr/samba:latest
     container_name: samba
     restart: unless-stopped
     environment:
-      TZ: ${TZ}
-      USERID: 1000
-      GROUPID: 1000
-      PERMISSIONS: true
-      USER: ${USERNAME};${PASSWORD}
-      SHARE: Media;/Media;yes;no;yes;${USERNAME}
+      NAME: Media
+      USER: ${USERNAME}
+      PASS: ${PASSWORD}
     ports:
       - 139:139
       - 445:445
     volumes:
-      - /mnt:/Media
+      - /mnt:/storage
     networks:
       - homelab
 
