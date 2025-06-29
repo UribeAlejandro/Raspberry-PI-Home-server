@@ -4,6 +4,12 @@ networks:
   homelab:
     external: true
 
+include:
+  - docker-compose-ad-blocker.yaml
+  - docker-compose-ai-automation.yaml
+  - docker-compose-arr.yaml
+  - docker-compose-monitoring.yaml
+
 services:
   portainer:
     hostname: portainer
