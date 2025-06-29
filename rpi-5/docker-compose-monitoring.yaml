@@ -45,7 +45,7 @@ services:
     restart: unless-stopped
     user: "472"
     networks:
-      internal:
+      homelab:
       homelab_vlan:
         ipv4_address: 192.168.1.202
     ports:
@@ -80,7 +80,7 @@ services:
     cap_add:
       - SYS_ADMIN
     networks:
-      - internal
+      - homelab
     expose:
       - 8080
     command:
@@ -118,7 +118,7 @@ services:
     hostname: rpi-exporter
     restart: unless-stopped
     networks:
-      - internal
+      - homelab
     expose:
       - 9100
     command:
@@ -162,7 +162,7 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
-      - internal
+      - homelab
     expose:
       - 9090
     volumes:
