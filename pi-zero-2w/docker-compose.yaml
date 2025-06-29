@@ -26,16 +26,16 @@ services:
       #- "123:123/udp"
     environment:
       TZ: ${TZ}
-      FTLCONF_webserver_api_password: ${PASSWORD}
       PIHOLE_UID: ${PUID}
       PIHOLE_GID: ${PGID}
       TAIL_FTL_LOG: 1
       FTLCONF_dns_upstreams: 127.0.0.1#5335
-      FTLCONF_dns_listeningMode: 'all'
+      FTLCONF_dns_cache_size: ${DNS_CACHE_SIZE}
+      FTLCONF_webserver_api_password: ${PASSWORD}
+      FTLCONF_dns_listeningMode: ${DNS_LISTENING_MODE}
       FTLCONF_ntp_ipv4_active: ${NTP_IPV4_ACTIVE:-true}
       FTLCONF_ntp_ipv6_active: ${NTP_IPV6_ACTIVE:-true}
       FTLCONF_ntp_sync_active: ${NTP_IPV6_ACTIVE:-true}
-      FTLCONF_dns_cache_size: 0
     volumes:
       - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
     cap_add:
