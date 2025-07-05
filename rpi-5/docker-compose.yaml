@@ -9,6 +9,7 @@ include:
   - docker-compose-ai-automation.yaml
   - docker-compose-arr.yaml
   - docker-compose-monitoring.yaml
+  - docker-compose-utils.yaml
 
 services:
   portainer:
@@ -24,26 +25,6 @@ services:
       - ${SERVICES_ROOT}/portainer:/data
     networks:
       - homelab
-
-  homepage:
-    hostname: homepage
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
-    restart: unless-stopped
-    environment:
-      TZ: ${TZ}
-      PORT: 80
-      LOG_LEVEL: info
-      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.200
-    volumes:
-      - ${SERVICES_ROOT}/homepage/config:/app/config:rw
-      - /mnt/Movies:/mnt/Movies:ro
-      - /mnt/Series:/mnt/Series:ro
-    networks:
-      homelab_vlan:
-        ipv4_address: 192.168.1.200
-      homelab:
-
 
   samba:
     image: dockurr/samba:latest

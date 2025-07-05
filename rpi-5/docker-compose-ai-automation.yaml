@@ -5,32 +5,32 @@ networks:
     external: true
 
 services:
-  webui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: webui
-    restart: unless-stopped
-    hostname: webui
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    ports:
-      - 9191:8080/tcp
-    volumes:
-      - ${SERVICES_ROOT}/webui:/app/backend/data
-    depends_on: [ ollama ]
-    networks:
-      - homelab
-
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
-    restart: unless-stopped
-    hostname: ollama
-    ports:
-      - 11434:11434/tcp
-    volumes:
-      - ${SERVICES_ROOT}/ollama/ollama:/root/.ollama
-    networks:
-      - homelab
+#  webui:
+#    image: ghcr.io/open-webui/open-webui:main
+#    container_name: webui
+#    restart: unless-stopped
+#    hostname: webui
+#    environment:
+#      OLLAMA_BASE_URL: http://ollama:11434
+#    ports:
+#      - 9191:8080/tcp
+#    volumes:
+#      - ${SERVICES_ROOT}/webui:/app/backend/data
+#    depends_on: [ ollama ]
+#    networks:
+#      - homelab
+#
+#  ollama:
+#    image: ollama/ollama
+#    container_name: ollama
+#    restart: unless-stopped
+#    hostname: ollama
+#    ports:
+#      - 11434:11434/tcp
+#    volumes:
+#      - ${SERVICES_ROOT}/ollama/ollama:/root/.ollama
+#    networks:
+#      - homelab
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
