@@ -10,6 +10,7 @@ include:
   - docker-compose-arr.yaml
   - docker-compose-monitoring.yaml
   - docker-compose-utils.yaml
+  - docker-compose-auth.yaml
 
 services:
   portainer:
