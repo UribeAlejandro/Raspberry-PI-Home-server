@@ -29,7 +29,7 @@ services:
       PIHOLE_UID: ${PUID}
       PIHOLE_GID: ${PGID}
       TAIL_FTL_LOG: 1
-      FTLCONF_dns_upstreams: 127.0.0.1#5335
+      FTLCONF_dns_upstreams: 0.0.0.0#5335
       FTLCONF_dns_cache_size: ${DNS_CACHE_SIZE}
       FTLCONF_webserver_api_password: ${PASSWORD}
       FTLCONF_dns_listeningMode: ${DNS_LISTENING_MODE}
@@ -47,19 +47,15 @@ services:
 
   unbound:
     container_name: unbound
-    image: mvance/unbound-rpi:latest # Change to use 'mvance/unbound-rpi:latest' on raspberry pi
-    # use pihole network stack
+    image: mvance/unbound-rpi:latest
     network_mode: service:pihole
     volumes:
-      # main config
-      - ${SERVICES_ROOT}/unbound/config/unbound.conf:/opt/unbound/etc/unbound/unbound.conf:ro
-      # custom config (unbound.conf.d/your-config.conf). unbound.conf includes these via wilcard include
-      - ${SERVICES_ROOT}/unbound/config/unbound.conf.d:/opt/unbound/etc/unbound/unbound.conf.d:ro
-      # log file
-      - ${SERVICES_ROOT}/unbound/logs/unbound.log:/opt/unbound/etc/unbound/unbound.log
+      - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
+      - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
+      - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
+      - ./unbound/zones.d/:/usr/local/unbound/zones.d/:rw
+      - ./unbound/iana.d/:/usr/local/unbound/iana.d/:rw
+    ports:
+      - "5335:5335/tcp"
+      - "5335:5335/udp"
     restart: unless-stopped
-    post_start:
-      # remove unused config files
-      - command: rm -f /opt/unbound/etc/unbound/a-records.conf
-      - command: rm -f /opt/unbound/etc/unbound/forward-records.conf
-      - command: rm -f /opt/unbound/etc/unbound/srv-records.conf
