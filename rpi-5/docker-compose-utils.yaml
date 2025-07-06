@@ -50,17 +50,3 @@ services:
     restart: unless-stopped
     networks:
       - homelab
-
-  duckdns:
-    hostname: duckdns
-    image: lscr.io/linuxserver/duckdns:latest
-    container_name: duckdns
-    environment:
-      TZ: ${TZ}
-      PUID: ${PUID}
-      PGID: ${PGID}
-      SUBDOMAINS: ${DUCK_DNS_SUBDOMAINS}
-      TOKEN: ${DUCK_DNS_TOKEN}
-    volumes:
-      - ${SERVICES_ROOT}/duckdns/config:/config
-    restart: unless-stopped
