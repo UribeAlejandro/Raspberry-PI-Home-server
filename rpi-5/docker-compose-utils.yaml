@@ -25,6 +25,7 @@ services:
       homelab:
 
   openvscode-server:
+    hostname: openvscode-server
     image: lscr.io/linuxserver/openvscode-server:latest
     container_name: openvscode-server
     environment:
@@ -40,6 +41,7 @@ services:
       - homelab
 
   cloudflared:
+    hostname: cloudflared
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     command: tunnel run
@@ -48,3 +50,17 @@ services:
     restart: unless-stopped
     networks:
       - homelab
+
+  duckdns:
+    hostname: duckdns
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      SUBDOMAINS: ${DUCK_DNS_SUBDOMAINS}
+      TOKEN: ${DUCK_DNS_TOKEN}
+    volumes:
+      - ${SERVICES_ROOT}/duckdns/config:/config
+    restart: unless-stopped
