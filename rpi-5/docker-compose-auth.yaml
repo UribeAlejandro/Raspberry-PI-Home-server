@@ -22,6 +22,8 @@ services:
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_DB: ${PG_DB}
+    env_file:
+      - .env
     networks:
       - homelab
 
@@ -37,6 +39,8 @@ services:
       interval: 30s
       retries: 5
       timeout: 3s
+    env_file:
+      - .env
     volumes:
       - ${SERVICES_ROOT}/authentik/database/redis:/data
     networks:
@@ -65,6 +69,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     networks:
       - homelab
 
@@ -97,5 +103,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     networks:
       - homelab
