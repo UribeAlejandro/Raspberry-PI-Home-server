@@ -22,7 +22,7 @@ services:
       - 32414:32414/udp
     environment:
       TZ: ${TZ}
-      ALLOWED_NETWORKS: 192.168.1.0/24
+      ALLOWED_NETWORKS: 192.168.1.0/24,172.25.0.0/24
     volumes:
       - ${SERVICES_ROOT}/plex/config:/config
       - ${SERVICES_ROOT}/plex/transcode:/transcode
@@ -32,6 +32,7 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.254
       homelab:
+
   transmission:
     image: haugene/transmission-openvpn:latest
     hostname: transmission

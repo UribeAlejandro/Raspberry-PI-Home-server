@@ -68,8 +68,3 @@ services:
     restart: unless-stopped
     healthcheck:
       disable: true
-    post_start:
-      # remove unused config files
-      - command: rm -f /opt/unbound/etc/unbound/a-records.conf
-      - command: rm -f /opt/unbound/etc/unbound/forward-records.conf
-      - command: rm -f /opt/unbound/etc/unbound/srv-records.conf
