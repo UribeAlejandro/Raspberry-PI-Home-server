@@ -57,13 +57,16 @@ services:
   unbound:
     container_name: unbound
     image: mvance/unbound-rpi:latest
-    network_mode: service:adguardhome
+#    network_mode: service:adguardhome
     volumes:
       - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
       - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
       - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
       - ./unbound/zones.d/:/usr/local/unbound/zones.d/:rw
       - ./unbound/iana.d/:/usr/local/unbound/iana.d/:rw
+    ports:
+      - 5335:5335/tcp
+      - 5335:5335/udp
     healthcheck:
       disable: true
     restart: unless-stopped
