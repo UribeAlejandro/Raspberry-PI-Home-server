@@ -55,7 +55,4 @@ services:
       - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
       - ./unbound/zones.d/:/usr/local/unbound/zones.d/:rw
       - ./unbound/iana.d/:/usr/local/unbound/iana.d/:rw
-    ports:
-      - "5335:5335/tcp"
-      - "5335:5335/udp"
     restart: unless-stopped
