@@ -38,3 +38,13 @@ services:
     restart: unless-stopped
     networks:
       - homelab
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
+    restart: unless-stopped
+    networks:
+      - homelab
