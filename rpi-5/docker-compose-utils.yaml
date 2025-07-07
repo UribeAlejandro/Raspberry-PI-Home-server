@@ -44,7 +44,7 @@ services:
       TZ: ${TZ}
       PUID: ${PUID}
       PGID: ${PGID}
-      CONNECTION_TOKEN: ${PASSWORD}
+      CONNECTION_TOKEN: ${OPENVSCODE_CONNECTION_TOKEN}
     volumes:
       - ${SERVICES_ROOT}/openvscode-server/config:/config
       - ${SERVICES_ROOT}/:/workspace
