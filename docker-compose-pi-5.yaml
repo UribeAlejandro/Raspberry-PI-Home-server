@@ -1,16 +1,29 @@
 networks:
-  homelab_vlan:
-    external: true
   homelab:
-    external: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/24
+          gateway: 172.25.0.1
+  homelab_vlan:
+    driver_opts:
+      parent: eth0
+    ipam:
+      driver: macvlan
+      config:
+        - subnet: 192.168.1.0/24
+          ip_range: 192.168.1.0/24
+          gateway: 192.168.1.1
 
 include:
-  - docker-compose-ad-blocker.yaml
-  - docker-compose-ai-automation.yaml
-  - docker-compose-arr.yaml
-  - docker-compose-monitoring.yaml
-  - docker-compose-utils.yaml
-  - docker-compose-auth.yaml
+  - common/docker-compose-unbound.yaml
+  - rpi-5/docker-compose-ad-blocker.yaml
+  - rpi-5/docker-compose-ai-automation.yaml
+  - rpi-5/docker-compose-arr.yaml
+  - rpi-5/docker-compose-auth.yaml
+  - rpi-5/docker-compose-monitoring.yaml
+  - rpi-5/docker-compose-utils.yaml
 
 services:
   portainer:

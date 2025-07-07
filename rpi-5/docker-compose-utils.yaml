@@ -14,7 +14,7 @@ services:
       TZ: ${TZ}
       PORT: 80
       LOG_LEVEL: info
-      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.200
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS}
     volumes:
       - ${SERVICES_ROOT}/homepage/config:/app/config:rw
       - /mnt/Movies:/mnt/Movies:ro
@@ -34,6 +34,7 @@ services:
       PGID: ${PGID}
     volumes:
       - ${SERVICES_ROOT}/openvscode-server/config:/config
+      - ${SERVICES_ROOT}/openvscode-server/workspace:/workspace
     ports:
       - 5000:3000
     restart: unless-stopped
