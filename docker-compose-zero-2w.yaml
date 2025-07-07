@@ -1,11 +1,8 @@
 networks:
   homelab:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.0.0/24
-          gateway: 172.25.0.1
+    external: true
+  homelab_vlan:
+    external: true
 
 include:
   - common/docker-compose-unbound.yaml
