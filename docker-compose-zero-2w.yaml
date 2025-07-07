@@ -7,6 +7,9 @@ networks:
         - subnet: 172.25.0.0/24
           gateway: 172.25.0.1
 
+include:
+  - common/docker-compose-unbound.yaml
+
 services:
   pihole:
     hostname: pihole
