@@ -38,5 +38,57 @@ Create a `.env` file in the root of the repository following the `.env.template`
 
 ## Usage
 
-Run `docker-compose up -d` to start the services.
+Run `docker-compose -f [filename] up -d` to start the services.
 
+Test the `unbound` service by running:
+
+```bash
+dig www.google.com @172.25.0.28 -p 5335
+```
+
+Install `dns-utils` if needed:
+
+```bash
+sudo apt-get install dnsutils
+```
+
+## Troubleshooting
+
+### `No memory limit support`
+
+Can happen when starting [monitoring](rpi-5/docker-compose-monitoring.yaml) containers.
+
+Try:
+
+```bash
+docker info
+```
+
+Getting the following output:
+
+```bash
+WARNING: No memory limit support
+WARNING: No swap limit support
+WARNING: No kernel memory limit support
+WARNING: No oom kill disable support
+WARNING: No cpu cfs quota support
+WARNING: No cpu cfs period support
+```
+
+Then enable `cgroups`, as follows:
+
+```bash
+sudo nano /boot/firmware/cmdline.txt
+```
+
+Then add the following content:
+
+```bash
+cgroup_enable=memory swapaccount=1 cgroup_memory=1 cgroup_enable=cpuset
+```
+
+Then reboot the Raspberry Pi:
+
+```bash
+sudo reboot now
+```

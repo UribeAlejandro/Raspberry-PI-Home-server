@@ -44,9 +44,10 @@ services:
       TZ: ${TZ}
       PUID: ${PUID}
       PGID: ${PGID}
+      CONNECTION_TOKEN: ${PASSWORD}
     volumes:
       - ${SERVICES_ROOT}/openvscode-server/config:/config
-      - ${SERVICES_ROOT}/openvscode-server/workspace:/workspace
+      - ${SERVICES_ROOT}/:/workspace
     ports:
       - 5000:3000
     restart: unless-stopped

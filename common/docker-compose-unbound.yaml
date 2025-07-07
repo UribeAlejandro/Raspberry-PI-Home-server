@@ -22,4 +22,3 @@ services:
     networks:
       homelab:
         ipv4_address: 172.25.0.28
-
