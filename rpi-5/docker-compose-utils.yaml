@@ -5,24 +5,36 @@ networks:
     external: true
 
 services:
-  homepage:
-    hostname: homepage
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
+  portainer:
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SERVICES_ROOT}/portainer:/data
+    networks:
+      - homelab
+
+  samba:
+    hostname: samba
+    image: dockurr/samba:latest
+    container_name: samba
     restart: unless-stopped
     environment:
-      TZ: ${TZ}
-      PORT: 80
-      LOG_LEVEL: info
-      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS}
+      NAME: Media
+      USER: ${USERNAME}
+      PASS: ${PASSWORD}
+    ports:
+      - 139:139
+      - 445:445
     volumes:
-      - ${SERVICES_ROOT}/homepage/config:/app/config:rw
-      - /mnt/Movies:/mnt/Movies:ro
-      - /mnt/Series:/mnt/Series:ro
+      - /mnt:/storage
     networks:
-      homelab_vlan:
-        ipv4_address: 192.168.1.200
-      homelab:
+      - homelab
 
   openvscode-server:
     hostname: openvscode-server

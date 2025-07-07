@@ -6,7 +6,7 @@ networks:
 
 services:
   speedtest-tracker:
-    hostname: internetspeed
+    hostname: speedtest
     container_name: speedtest
     restart: unless-stopped
     image: lscr.io/linuxserver/speedtest-tracker:latest
