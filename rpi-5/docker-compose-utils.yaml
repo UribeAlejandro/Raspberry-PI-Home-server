@@ -36,24 +36,6 @@ services:
     networks:
       - homelab
 
-  openvscode-server:
-    hostname: openvscode-server
-    image: lscr.io/linuxserver/openvscode-server:latest
-    container_name: openvscode-server
-    environment:
-      TZ: ${TZ}
-      PUID: ${PUID}
-      PGID: ${PGID}
-      CONNECTION_TOKEN: ${OPENVSCODE_CONNECTION_TOKEN}
-    volumes:
-      - ${SERVICES_ROOT}/openvscode-server/config:/config
-      - ${SERVICES_ROOT}/:/workspace
-    ports:
-      - 5000:3000
-    restart: unless-stopped
-    networks:
-      - homelab
-
   cloudflared:
     hostname: cloudflared
     image: cloudflare/cloudflared:latest
@@ -61,6 +43,24 @@ services:
     command: tunnel run
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  code-server:
+    hostname: code-server
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      PASSWORD: ${PASSWORD}
+    volumes:
+      - ~/Documents:/workspace
+      - ${SERVICES_ROOT}/code-server/config:/config
+    ports:
+      - 5443:8443
     restart: unless-stopped
     networks:
       - homelab
