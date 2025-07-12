@@ -10,9 +10,6 @@ services:
     container_name: speedtest
     restart: unless-stopped
     image: lscr.io/linuxserver/speedtest-tracker:latest
-    ports:
-      - 8080:80
-      - 8443:443
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -27,7 +24,7 @@ services:
     volumes:
       - ${SERVICES_ROOT}/speedtest-tracker:/config
     healthcheck:
-      test: curl -fSs https://speedtest.example.com/api/healthcheck | jq -r .message || exit 1
+      test: curl -fSs http://localhost/api/healthcheck | jq -r .message || exit 1
       interval: 10s
       retries: 3
       start_period: 30s
