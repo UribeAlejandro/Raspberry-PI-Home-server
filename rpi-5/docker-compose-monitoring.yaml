@@ -10,7 +10,6 @@ services:
     container_name: speedtest
     restart: unless-stopped
     image: lscr.io/linuxserver/speedtest-tracker:latest
-    depends_on: [ influxdb ]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -34,26 +33,6 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.201
       homelab:
-
-  influxdb:
-    hostname: influxdb
-    container_name: influxdb
-    restart: unless-stopped
-    image: influxdb:2
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: ${USERNAME}
-      DOCKER_INFLUXDB_INIT_PASSWORD: ${PASSWORD}
-      DOCKER_INFLUXDB_INIT_ORG: compumundo
-      DOCKER_INFLUXDB_INIT_BUCKET: compumundo
-      DOCKER_INFLUXDB_INIT_RETENTION: 4w
-    volumes:
-      - ${SERVICES_ROOT}/influxdb2/data:/var/lib/influxdb2
-      - ${SERVICES_ROOT}/influxdb2/config:/etc/influxdb2
-    expose:
-      - 8086
-    networks:
-      - homelab
 
   grafana:
     container_name: monitoring-grafana
