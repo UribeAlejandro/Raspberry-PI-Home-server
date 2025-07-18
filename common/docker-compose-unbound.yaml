@@ -20,7 +20,7 @@ services:
       ENABLE_STATS: true
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./unbound/healthcheck.sh:/usr/local/unbound/sbin/healthcheck.sh:ro
+      - ./unbound/healthcheck.sh:/healthcheck.sh:ro
       - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
       - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
       - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
@@ -32,7 +32,7 @@ services:
       unbound-db:
         condition: service_healthy
     healthcheck:
-      test: /usr/local/unbound/sbin/healthcheck.sh
+      test: sh /healthcheck.sh
       interval: 60s
       retries: 3
       start_period: 5s
@@ -62,11 +62,10 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - ./unbound-db/data:/data/
       - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf
-#      - ./unbound-db/sysctl.conf:/etc/sysctl.conf
-      - ./unbound-db/healthcheck.sh:/usr/local/sbin/healthcheck.sh:ro
+      - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
       - cachedb.d:/usr/local/unbound/cachedb.d/
     healthcheck:
-      test: /usr/local/sbin/healthcheck.sh
+      test: sh /healthcheck.sh
       interval: 10s
       retries: 3
       start_period: 5s
