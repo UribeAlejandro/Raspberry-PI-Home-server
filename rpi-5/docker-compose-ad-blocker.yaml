@@ -9,6 +9,9 @@ services:
     hostname: adguardhome
     container_name: adguardhome
     image: adguard/adguardhome:latest
+    depends_on:
+      unbound:
+        condition: service_healthy
     ports:
       # Plain DNS
       - 53:53/tcp

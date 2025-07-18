@@ -29,7 +29,7 @@ services:
       - cachedb.d:/usr/local/unbound/cachedb.d/
     restart: always
     depends_on:
-      unbound-db:
+      redis-unbound-db:
         condition: service_healthy
     healthcheck:
       test: sh /healthcheck.sh
@@ -52,9 +52,9 @@ services:
     networks:
       - homelab
 
-  unbound-db:
-    hostname: unbound-db
-    container_name: unbound-db
+  redis-unbound-db:
+    hostname: redis-unbound-db
+    container_name: redis-unbound-db
     image: redis:alpine
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
