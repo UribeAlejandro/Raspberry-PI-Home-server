@@ -42,7 +42,7 @@ services:
         ipv4_address: 172.25.0.28
 
   unbound-db-socket:
-    image: busybox
+    image: arm64v8/busybox
     container_name: unbound-db-socket
     init: true
     tty: true
@@ -62,7 +62,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - ./unbound-db/data:/data/
       - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf
-      - ./unbound-db/sysctl.conf:/etc/sysctl.conf
+#      - ./unbound-db/sysctl.conf:/etc/sysctl.conf
       - ./unbound-db/healthcheck.sh:/usr/local/sbin/healthcheck.sh:ro
       - cachedb.d:/usr/local/unbound/cachedb.d/
     healthcheck:

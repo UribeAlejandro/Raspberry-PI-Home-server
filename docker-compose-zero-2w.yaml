@@ -33,6 +33,7 @@ services:
       - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
     cap_add:
       - SYS_NICE
+      - NET_BIND_SERVICE
     privileged: true
     restart: unless-stopped
     networks:
