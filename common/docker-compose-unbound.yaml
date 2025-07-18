@@ -20,7 +20,7 @@ services:
       ENABLE_STATS: true
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./unbound/usr/local/unbound/sbin/healthcheck.sh:/usr/local/unbound/sbin/healthcheck.sh:ro
+      - ./unbound/healthcheck.sh:/usr/local/unbound/sbin/healthcheck.sh:ro
       - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
       - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
       - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
@@ -42,7 +42,7 @@ services:
         ipv4_address: 172.25.0.28
 
   unbound-db-socket:
-    image: arm64v8/busybox
+    image: busybox
     container_name: unbound-db-socket
     init: true
     tty: true
