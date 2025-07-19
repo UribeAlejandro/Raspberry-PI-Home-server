@@ -12,6 +12,7 @@ include:
   - rpi-5/docker-compose-auth.yaml
   - rpi-5/docker-compose-monitoring.yaml
   - rpi-5/docker-compose-utils.yaml
+  - rpi-5/docker-compose-proxy.yaml
 
 services:
   homepage:
