@@ -1,0 +1,34 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+
+volumes:
+  traefik:
+    name: traefik
+
+services:
+  traefik:
+    image: traefik
+    hostname: traefik
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: ${TZ}
+      CF_API_EMAIL: ${CLOUDFLARED_EMAIL}
+      CF_DNS_API_TOKEN: ${CLOUDFLARED_TOKEN}
+    ports:
+      - 80:80 # HTTP entryPoints
+      - 443:443 # HTTPS entryPoints
+      - 8080:8080 # Dashbaord WebGui
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - traefik:/certs
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.203
+      homelab:
