@@ -6,12 +6,12 @@ networks:
 
 include:
   - common/docker-compose-unbound.yaml
-  - rpi-5/docker-compose-ad-blocker.yaml
-  - rpi-5/docker-compose-ai-automation.yaml
-  - rpi-5/docker-compose-arr.yaml
-  - rpi-5/docker-compose-auth.yaml
-  - rpi-5/docker-compose-monitoring.yaml
-  - rpi-5/docker-compose-utils.yaml
+  - pi-5/docker-compose-ad-blocker.yaml
+  - pi-5/docker-compose-ai-automation.yaml
+  - pi-5/docker-compose-arr.yaml
+  - pi-5/docker-compose-auth.yaml
+  - pi-5/docker-compose-monitoring.yaml
+  - pi-5/docker-compose-utils.yaml
 
 services:
   homepage:

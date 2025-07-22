@@ -29,7 +29,7 @@ services:
       - cachedb.d:/usr/local/unbound/cachedb.d/
     restart: always
     depends_on:
-      redis-unbound-db:
+      unbound-db-redis:
         condition: service_healthy
     healthcheck:
       test: sh /healthcheck.sh
@@ -44,6 +44,7 @@ services:
   unbound-db-socket:
     image: busybox
     container_name: unbound-db-socket
+    hostname: unbound-db-socket
     init: true
     tty: true
     command: /bin/sh -c "chown -R 999:1000 /usr/local/unbound/cachedb.d/"
@@ -52,11 +53,16 @@ services:
     networks:
       - homelab
 
-  redis-unbound-db:
-    hostname: redis-unbound-db
-    container_name: redis-unbound-db
+  unbound-db-redis:
+    hostname: unbound-db-redis
+    container_name: unbound-db-redis
     image: redis:alpine
     command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+    expose:
+      - 6379
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -64,6 +70,7 @@ services:
       - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf
       - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
       - cachedb.d:/usr/local/unbound/cachedb.d/
+    restart: always
     healthcheck:
       test: sh /healthcheck.sh
       interval: 10s

@@ -56,7 +56,7 @@ sudo apt-get install dnsutils
 
 ### `No memory limit support`
 
-Can happen when starting [monitoring](rpi-5/docker-compose-monitoring.yaml) containers.
+Can happen when starting [monitoring](pi-5/docker-compose-monitoring.yaml) containers.
 
 Try:
 
