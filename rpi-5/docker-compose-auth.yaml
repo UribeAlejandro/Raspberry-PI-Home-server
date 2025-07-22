@@ -5,7 +5,7 @@ networks:
     external: true
 
 services:
-  postgresql:
+  authentik-postgresql:
     hostname: postgresql
     image: docker.io/library/postgres:16-alpine
     container_name: postgresql
@@ -27,7 +27,7 @@ services:
     networks:
       - homelab
 
-  redis:
+  authentik-redis:
     hostname: redis
     image: docker.io/library/redis:alpine
     container_name: redis
@@ -47,7 +47,7 @@ services:
     networks:
       - homelab
 
-  server:
+  authentik-server:
     hostname: authentik-server
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     container_name: authentik-server
@@ -66,17 +66,17 @@ services:
       - ${SERVICES_ROOT}/authentik/media:/media
       - ${SERVICES_ROOT}/authentik/custom-templates:/templates
     ports:
-      - "${COMPOSE_PORT_HTTP:-9500}:9000"
-      - "${COMPOSE_PORT_HTTPS:-9443}:9443"
+      - 9500:9000
+      - 9443:9443
     depends_on:
-      postgresql:
+      authentik-postgresql:
         condition: service_healthy
-      redis:
+      authentik-redis:
         condition: service_healthy
     networks:
       - homelab
 
-  worker:
+  authentik-worker:
     hostname: authentik-worker
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     container_name: authentik-worker
@@ -97,9 +97,9 @@ services:
       - ${SERVICES_ROOT}/authentik/certs:/certs
       - ${SERVICES_ROOT}/authentik/custom-templates:/templates
     depends_on:
-      postgresql:
+      authentik-postgresql:
         condition: service_healthy
-      redis:
+      authentik-redis:
         condition: service_healthy
     networks:
       - homelab
