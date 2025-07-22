@@ -5,10 +5,10 @@ networks:
     external: true
 
 services:
-  postgresql:
-    hostname: postgresql
+  authentik-postgresql:
+    hostname: authentik-postgresql
+    container_name: authentik-postgresql
     image: docker.io/library/postgres:16-alpine
-    container_name: postgresql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
@@ -27,10 +27,10 @@ services:
     networks:
       - homelab
 
-  redis:
-    hostname: redis
+  authentik-redis:
+    hostname: authentik-redis
+    container_name: authentik-redis
     image: docker.io/library/redis:alpine
-    container_name: redis
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
     healthcheck:
@@ -47,17 +47,17 @@ services:
     networks:
       - homelab
 
-  server:
+  authentik-server:
     hostname: authentik-server
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     container_name: authentik-server
-    restart: unless-stopped
     command: server
+    restart: unless-stopped
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
       AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
@@ -66,27 +66,27 @@ services:
       - ${SERVICES_ROOT}/authentik/media:/media
       - ${SERVICES_ROOT}/authentik/custom-templates:/templates
     ports:
-      - "${COMPOSE_PORT_HTTP:-9500}:9000"
-      - "${COMPOSE_PORT_HTTPS:-9443}:9443"
+      - 9500:9000
+      - 9443:9443
     depends_on:
-      postgresql:
+      authentik-postgresql:
         condition: service_healthy
-      redis:
+      authentik-redis:
         condition: service_healthy
     networks:
       - homelab
 
-  worker:
+  authentik-worker:
     hostname: authentik-worker
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     container_name: authentik-worker
-    restart: unless-stopped
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     command: worker
+    restart: unless-stopped
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
       AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
@@ -97,9 +97,9 @@ services:
       - ${SERVICES_ROOT}/authentik/certs:/certs
       - ${SERVICES_ROOT}/authentik/custom-templates:/templates
     depends_on:
-      postgresql:
+      authentik-postgresql:
         condition: service_healthy
-      redis:
+      authentik-redis:
         condition: service_healthy
     networks:
       - homelab

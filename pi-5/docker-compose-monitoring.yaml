@@ -4,6 +4,26 @@ networks:
   homelab:
     external: true
 
+volumes:
+  grafana-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${SERVICES_ROOT}/monitoring/grafana
+      o: bind
+    labels:
+      - "com.example.description=Grafana Persistent Data"
+      - "com.example.service=monitoring"
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${SERVICES_ROOT}/monitoring/prometheus
+      o: bind
+    labels:
+      - "com.example.description=Prometheus Persistent Data"
+      - "com.example.service=monitoring"
+
 services:
   speedtest-tracker:
     hostname: speedtest
@@ -183,13 +203,3 @@ services:
         max-file: "3"
     mem_limit: 1g
     mem_reservation: 512m
-
-volumes:
-  grafana-data:
-    labels:
-      - "com.example.description=Grafana Persistent Data"
-      - "com.example.service=monitoring"
-  prometheus-data:
-    labels:
-      - "com.example.description=Prometheus Persistent Data"
-      - "com.example.service=monitoring"
