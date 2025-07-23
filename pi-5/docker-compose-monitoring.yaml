@@ -60,6 +60,8 @@ services:
     hostname: rpi-grafana
     restart: unless-stopped
     user: "472"
+    cap_add:
+      - CHOWN
     networks:
       homelab:
       homelab_vlan:
