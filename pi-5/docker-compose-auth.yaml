@@ -4,12 +4,15 @@ networks:
   homelab:
     external: true
 
+name: Authentik Identity Provider
+
 services:
   authentik-postgresql:
     hostname: authentik-postgresql
     container_name: authentik-postgresql
     image: docker.io/library/postgres:16-alpine
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       start_period: 20s
@@ -19,8 +22,6 @@ services:
     volumes:
       - ${SERVICES_ROOT}/authentik/database/postgres:/var/lib/postgresql/data
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_DB: ${PG_DB}
@@ -33,15 +34,13 @@ services:
     image: docker.io/library/redis:alpine
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       start_period: 20s
       interval: 30s
       retries: 5
       timeout: 3s
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
     volumes:
       - ${SERVICES_ROOT}/authentik/database/redis:/data
     networks:
@@ -53,9 +52,8 @@ services:
     container_name: authentik-server
     command: server
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
       AUTHENTIK_REDIS__HOST: authentik-redis
       AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
@@ -82,9 +80,8 @@ services:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
     command: worker
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
       AUTHENTIK_REDIS__HOST: authentik-redis
       AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
       AUTHENTIK_POSTGRESQL__USER: ${PG_USER}

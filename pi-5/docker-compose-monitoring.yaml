@@ -24,6 +24,8 @@ volumes:
       - "com.example.description=Prometheus Persistent Data"
       - "com.example.service=monitoring"
 
+name: Monitoring and Analytics
+
 services:
   speedtest-tracker:
     hostname: speedtest
@@ -60,6 +62,8 @@ services:
     hostname: rpi-grafana
     restart: unless-stopped
     user: "472"
+    cap_add:
+      - CHOWN
     networks:
       homelab:
       homelab_vlan:
@@ -170,6 +174,8 @@ services:
     hostname: rpi-prometheus
     restart: unless-stopped
     user: "nobody"
+    cap_add:
+      - CHOWN
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -179,8 +185,8 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - homelab
-    expose:
-      - 9090
+    ports:
+      - 9090:9090
     volumes:
       - prometheus-data:/prometheus
       - ./prometheus:/etc/prometheus/

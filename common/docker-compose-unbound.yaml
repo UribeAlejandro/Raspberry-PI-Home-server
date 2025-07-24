@@ -5,6 +5,8 @@ networks:
 volumes:
   cachedb.d:
 
+name: Unbound DNS Resolver with Redis Cache
+
 services:
   unbound:
     hostname: unbound
@@ -58,9 +60,7 @@ services:
     container_name: unbound-db-redis
     image: redis:alpine
     command: redis-server /usr/local/etc/redis/redis.conf
-    environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
+    user: "${PUID}:${PGID}"
     expose:
       - 6379
     volumes:

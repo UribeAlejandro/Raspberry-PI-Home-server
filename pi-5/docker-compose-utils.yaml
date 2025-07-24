@@ -4,12 +4,15 @@ networks:
   homelab:
     external: true
 
+name: Utility Services
+
 services:
   portainer:
     hostname: portainer
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     ports:
       - 9000:9000
     volumes:
@@ -24,6 +27,7 @@ services:
     image: dockurr/samba:latest
     container_name: samba
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     environment:
       NAME: Media
       USER: ${USERNAME}
