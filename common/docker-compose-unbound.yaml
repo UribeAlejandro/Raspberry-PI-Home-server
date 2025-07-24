@@ -60,14 +60,15 @@ services:
     container_name: unbound-db-redis
     image: redis:alpine
     command: redis-server /usr/local/etc/redis/redis.conf
-    user: "${PUID}:${PGID}"
+    environment:
+      TZ: ${TZ}
+    cap_add:
+      - CHOWN
     expose:
       - 6379
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
       - ./unbound-db/data:/data/
-      - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
       - cachedb.d:/usr/local/unbound/cachedb.d/
     restart: always

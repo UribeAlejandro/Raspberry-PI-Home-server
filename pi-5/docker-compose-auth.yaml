@@ -48,7 +48,7 @@ services:
 
   authentik-server:
     hostname: authentik-server
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.2}
     container_name: authentik-server
     command: server
     restart: unless-stopped
@@ -77,7 +77,7 @@ services:
   authentik-worker:
     hostname: authentik-worker
     container_name: authentik-worker
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2024.12.2}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.2}
     command: worker
     restart: unless-stopped
     user: "${PUID}:${PGID}"

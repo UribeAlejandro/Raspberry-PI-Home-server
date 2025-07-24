@@ -61,9 +61,7 @@ services:
     image: grafana/grafana:latest
     hostname: rpi-grafana
     restart: unless-stopped
-    user: "472"
-    cap_add:
-      - CHOWN
+    user: "${PUID}"
     networks:
       homelab:
       homelab_vlan:
@@ -74,7 +72,7 @@ services:
       - ./grafana/.env
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
     healthcheck:
@@ -173,9 +171,7 @@ services:
     image: prom/prometheus:latest
     hostname: rpi-prometheus
     restart: unless-stopped
-    user: "nobody"
-    cap_add:
-      - CHOWN
+    user: "${PUID}"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -189,7 +185,7 @@ services:
       - 9090:9090
     volumes:
       - prometheus-data:/prometheus
-      - ./prometheus:/etc/prometheus/
+      - ./prometheus:/etc/prometheus/:ro
     depends_on:
       - cadvisor
       - node-exporter
