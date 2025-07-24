@@ -4,6 +4,8 @@ networks:
   homelab:
     external: true
 
+name: AI Automation and Workflow
+
 services:
 #  webui:
 #    image: ghcr.io/open-webui/open-webui:main

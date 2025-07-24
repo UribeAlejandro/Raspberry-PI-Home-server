@@ -4,6 +4,8 @@ networks:
   homelab:
     external: true
 
+name: Utility Services
+
 services:
   portainer:
     hostname: portainer
@@ -23,11 +25,13 @@ services:
     hostname: samba
     image: dockurr/samba:latest
     container_name: samba
-    restart: unless-stopped
+    restart: always
     environment:
       NAME: Media
       USER: ${USERNAME}
       PASS: ${PASSWORD}
+      UID: ${PUID}
+      GID: ${PGID}
     ports:
       - 139:139
       - 445:445
@@ -56,6 +60,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       PASSWORD: ${PASSWORD}
+      PWA_APPNAME: Compumundo
     volumes:
       - ~/Documents:/workspace
       - ${SERVICES_ROOT}/code-server/config:/config

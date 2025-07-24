@@ -19,6 +19,7 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     environment:
       TZ: ${TZ}
       PORT: 80

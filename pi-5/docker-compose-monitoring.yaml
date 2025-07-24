@@ -24,6 +24,8 @@ volumes:
       - "com.example.description=Prometheus Persistent Data"
       - "com.example.service=monitoring"
 
+name: Monitoring and Analytics
+
 services:
   speedtest-tracker:
     hostname: speedtest
@@ -59,7 +61,7 @@ services:
     image: grafana/grafana:latest
     hostname: rpi-grafana
     restart: unless-stopped
-    user: "472"
+    user: "${PUID}"
     networks:
       homelab:
       homelab_vlan:
@@ -70,7 +72,7 @@ services:
       - ./grafana/.env
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
     healthcheck:
@@ -169,7 +171,7 @@ services:
     image: prom/prometheus:latest
     hostname: rpi-prometheus
     restart: unless-stopped
-    user: "nobody"
+    user: "${PUID}"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -179,11 +181,11 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - homelab
-    expose:
-      - 9090
+    ports:
+      - 9090:9090
     volumes:
       - prometheus-data:/prometheus
-      - ./prometheus:/etc/prometheus/
+      - ./prometheus:/etc/prometheus/:ro
     depends_on:
       - cadvisor
       - node-exporter
