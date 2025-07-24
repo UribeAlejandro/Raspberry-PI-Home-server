@@ -5,6 +5,8 @@ networks:
 volumes:
   cachedb.d:
 
+name: Unbound DNS Resolver with Redis Cache
+
 services:
   unbound:
     hostname: unbound
@@ -59,15 +61,14 @@ services:
     image: redis:alpine
     command: redis-server /usr/local/etc/redis/redis.conf
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
+      TZ: ${TZ}
+    cap_add:
+      - CHOWN
     expose:
       - 6379
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
       - ./unbound-db/data:/data/
-      - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
       - cachedb.d:/usr/local/unbound/cachedb.d/
     restart: always

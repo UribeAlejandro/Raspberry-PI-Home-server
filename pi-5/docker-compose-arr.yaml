@@ -4,6 +4,8 @@ networks:
   homelab:
     external: true
 
+name: ARR Stack with Plex and Transmission
+
 services:
   plex:
     container_name: plex
