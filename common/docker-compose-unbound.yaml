@@ -21,7 +21,6 @@ services:
       EXTENDED_HEALTHCHECK_DOMAIN: "google.com"
       ENABLE_STATS: true
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ./unbound/healthcheck.sh:/healthcheck.sh:ro
       - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
       - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
