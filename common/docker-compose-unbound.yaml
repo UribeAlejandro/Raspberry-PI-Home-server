@@ -66,9 +66,9 @@ services:
     expose:
       - 6379
     volumes:
-      - ./unbound-db/data:/data/
       - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
+      - ${SERVICES_ROOT}/unbound/redis/data:/data/
       - cachedb.d:/usr/local/unbound/cachedb.d/
     restart: always
     healthcheck:
