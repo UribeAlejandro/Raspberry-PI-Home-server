@@ -15,6 +15,8 @@ include:
   - pi-5/docker-compose-reverse-proxy.yaml
   - pi-5/docker-compose-marreta.yaml
 
+name: Raspberry Pi 5 Services
+
 services:
   homepage:
     hostname: homepage
