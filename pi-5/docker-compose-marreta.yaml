@@ -1,0 +1,75 @@
+networks:
+  homelab:
+    external: true
+
+name: Marreta and Selenium Services
+
+services:
+  marreta:
+    hostname: marreta
+    container_name: marreta
+    image: ghcr.io/manualdousuario/marreta:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ${SERVICES_ROOT}/marreta/app/cache:/app/cache
+      - ${SERVICES_ROOT}/marreta/app/logs:/app/logs
+    environment:
+      SITE_NAME: Compumundo
+      SITE_DESCRIPTION: You paywalls have stood on my way long enough.
+      SITE_URL: http://192.168.1.251:8080
+      DNS_SERVERS: 94.140.14.14,94.140.15.15
+      DISABLE_CACHE: true
+      LANGUAGE: en
+      LOG_LEVEL: INFO
+      SELENIUM_HOST: ${SELENIUM_HOST:-selenium-hub:4444}
+      CLEANUP_DAYS: 7 # Optional
+    restart: unless-stopped
+    networks:
+      - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.marreta.rule=Host(`marreta.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.marreta.entrypoints=http"
+      - "traefik.http.routers.marreta-secure.rule=Host(`marreta.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.marreta-secure.entrypoints=https"
+      - "traefik.http.routers.marreta-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.marreta.loadbalancer.server.port=80"
+
+  selenium-hub:
+    hostname: selenium-hub
+    container_name: selenium-hub
+    image: selenium/hub:4.27.0-20241204
+    restart: always
+    environment:
+      - SE_ENABLE_TRACING=false
+      - GRID_MAX_SESSION=10
+      - GRID_BROWSER_TIMEOUT=10
+      - GRID_TIMEOUT=10
+    depends_on:
+      - marreta
+    expose:
+      - 4442
+      - 4443
+      - 4444
+    networks:
+      - homelab
+
+  selenium-firefox:
+    hostname: selenium-firefox
+    container_name: selenium-firefox
+    image: selenium/node-firefox:4.27.0-20241204
+    shm_size: 2gb
+    restart: always
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_ENABLE_TRACING=false
+      - SE_NODE_MAX_SESSIONS=10
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+    entrypoint: bash -c 'SE_OPTS="--host $$HOSTNAME" /opt/bin/entry_point.sh'
+    depends_on:
+      - selenium-hub
+    networks:
+      - homelab
