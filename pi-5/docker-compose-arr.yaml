@@ -12,16 +12,16 @@ services:
     image: plexinc/pms-docker
     restart: unless-stopped
     hostname: plex-server-home
-    ports:
-      - 32400:32400/tcp
-      - 3005:3005/tcp
-      - 8324:8324/tcp
-      - 32469:32469/tcp
-      - 1900:1900/udp
-      - 32410:32410/udp
-      - 32412:32412/udp
-      - 32413:32413/udp
-      - 32414:32414/udp
+    # ports:
+    #   - 32400:32400/tcp
+    #   - 3005:3005/tcp
+    #   - 8324:8324/tcp
+    #   - 32469:32469/tcp
+    #   - 1900:1900/udp
+    #   - 32410:32410/udp
+    #   - 32412:32412/udp
+    #   - 32413:32413/udp
+    #   - 32414:32414/udp
     environment:
       TZ: ${TZ}
       ALLOWED_NETWORKS: 192.168.1.0/24,172.25.0.0/24
@@ -34,6 +34,14 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.254
       homelab:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`plex.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.plex.entrypoints=http"
+      - "traefik.http.routers.plex-secure.rule=Host(`plex.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.plex-secure.entrypoints=https"
+      - "traefik.http.routers.plex-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.plex-secure.loadbalancer.server.port=32400"
 
   transmission:
     image: haugene/transmission-openvpn:latest
@@ -76,12 +84,20 @@ services:
       - ${SERVICES_ROOT}/transmission-openvpn:/config
       - /etc/localtime:/etc/localtime:ro
       - /mnt:/data
-    ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
+    expose:
+      - 9091
+      - 51413
+      - 51413/udp
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transmission.rule=Host(`transmission.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.transmission.entrypoints=http"
+      - "traefik.http.routers.transmission-secure.rule=Host(`transmission.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.transmission-secure.entrypoints=https"
+      - "traefik.http.routers.transmission-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.transmission-secure.loadbalancer.server.port=9091"
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -94,10 +110,18 @@ services:
       LOG_LEVEL: DEBUG
     volumes:
       - ${SERVICES_ROOT}/flaresolverr:/config
-    ports:
-      - 8191:8191
+    expose:
+      - 8191
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.flaresolverr.entrypoints=http"
+      - "traefik.http.routers.flaresolverr-secure.rule=Host(`flaresolverr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.flaresolverr-secure.entrypoints=https"
+      - "traefik.http.routers.flaresolverr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.flaresolverr-secure.loadbalancer.server.port=8191"
 
   jackett:
     image: linuxserver/jackett:latest
@@ -112,10 +136,18 @@ services:
     volumes:
       - /mnt:/downloads
       - ${SERVICES_ROOT}/Jackett:/config
-    ports:
-      - 9117:9117
+    expose:
+      - 9117
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jackett.rule=Host(`jackett.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.jackett.entrypoints=http"
+      - "traefik.http.routers.jackett-secure.rule=Host(`jackett.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.jackett-secure.entrypoints=https"
+      - "traefik.http.routers.jackett-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.jackett-secure.loadbalancer.server.port=9117"
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -130,11 +162,20 @@ services:
       - /mnt:/downloads
       - /mnt/Series/Series:/tv
       - ${SERVICES_ROOT}/Sonarr:/config
-    ports:
-      - 8989:8989
+    expose:
+      - 8989
     depends_on: [ transmission, jackett, prowlarr ]
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.sonarr.entrypoints=http"
+      - "traefik.http.routers.sonarr-secure.rule=Host(`sonarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.sonarr-secure.entrypoints=https"
+      - "traefik.http.routers.sonarr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.sonarr-secure.loadbalancer.server.port=8989"
+
 
   radarr:
     image: linuxserver/radarr:latest
@@ -149,11 +190,19 @@ services:
       - /mnt:/downloads
       - /mnt/Movies/Movies:/movies
       - ${SERVICES_ROOT}/radarr/config:/config
-    ports:
-      - 7878:7878
+    expose:
+      - 7878
     depends_on: [ transmission, jackett, prowlarr ]
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.radarr.entrypoints=http"
+      - "traefik.http.routers.radarr-secure.rule=Host(`radarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.radarr-secure.entrypoints=https"
+      - "traefik.http.routers.radarr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.radarr-secure.loadbalancer.server.port=7878"
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -166,11 +215,19 @@ services:
       PGID: ${PGID}
     volumes:
       - ${SERVICES_ROOT}/prowlarr:/config
-    ports:
-      - 9696:9696
+    expose:
+      - 9696
     depends_on: [ flaresolverr, transmission ]
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prowlarr.entrypoints=http"
+      - "traefik.http.routers.prowlarr-secure.rule=Host(`prowlarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prowlarr-secure.entrypoints=https"
+      - "traefik.http.routers.prowlarr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.prowlarr-secure.loadbalancer.server.port=9696"
 
   bazarr:
     image: linuxserver/bazarr:latest
@@ -185,11 +242,19 @@ services:
       - /mnt/Series/Series:/tv
       - /mnt/Movies/Movies:/movies
       - ${SERVICES_ROOT}/Bazarr:/config
-    ports:
-      - 6767:6767
+    expose:
+      - 6767
     depends_on: [ sonarr, radarr ]
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.bazarr.entrypoints=http"
+      - "traefik.http.routers.bazarr-secure.rule=Host(`bazarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.bazarr-secure.entrypoints=https"
+      - "traefik.http.routers.bazarr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.bazarr-secure.loadbalancer.server.port=6767"
 
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
@@ -202,8 +267,16 @@ services:
       PGID: ${PGID}
     volumes:
       - ${SERVICES_ROOT}/Overseerr:/config
-    ports:
-      - 5055:5055
+    expose:
+      - 5055
     depends_on: [ sonarr, radarr, bazarr, plex ]
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.overseerr.rule=Host(`overseerr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.overseerr.entrypoints=http"
+      - "traefik.http.routers.overseerr-secure.rule=Host(`overseerr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.overseerr-secure.entrypoints=https"
+      - "traefik.http.routers.overseerr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.overseerr-secure.loadbalancer.server.port=5055"

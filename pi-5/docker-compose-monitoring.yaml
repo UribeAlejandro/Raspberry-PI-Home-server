@@ -55,6 +55,14 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.201
       homelab:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.speedtest.rule=Host(`speedtest.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.speedtest.entrypoints=http"
+      - "traefik.http.routers.speedtest-secure.rule=Host(`speedtest.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.speedtest-secure.entrypoints=https"
+      - "traefik.http.routers.speedtest-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.speedtest-secure.loadbalancer.server.port=80"
 
   grafana:
     container_name: monitoring-grafana
@@ -63,11 +71,9 @@ services:
     restart: unless-stopped
     user: "${PUID}"
     networks:
-      homelab:
-      homelab_vlan:
-        ipv4_address: 192.168.1.202
-    ports:
-      - "4000:3000"
+      - homelab
+    expose:
+      - 3000
     env_file:
       - ./grafana/.env
     volumes:
@@ -82,6 +88,13 @@ services:
       retries: 3
       start_period: 30s
     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.grafana.entrypoints=http"
+      - "traefik.http.routers.grafana-secure.rule=Host(`grafana.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.grafana-secure.entrypoints=https"
+      - "traefik.http.routers.grafana-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.grafana-secure.loadbalancer.server.port=3000"
       - "com.example.description=Grafana Dashboard"
       - "com.example.service=monitoring"
     logging:
@@ -120,6 +133,13 @@ services:
       timeout: 10s
       retries: 3
     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cadvisor.rule=Host(`cadvisor.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.cadvisor.entrypoints=http"
+      - "traefik.http.routers.cadvisor-secure.rule=Host(`cadvisor.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.cadvisor-secure.entrypoints=https"
+      - "traefik.http.routers.cadvisor-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.cadvisor-secure.loadbalancer.server.port=8080"
       - "com.example.description=cAdvisor Container Monitoring"
       - "com.example.service=monitoring"
     logging:
@@ -181,8 +201,8 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - homelab
-    ports:
-      - 9090:9090
+    expose:
+      - 9090
     volumes:
       - prometheus-data:/prometheus
       - ./prometheus:/etc/prometheus/:ro
@@ -196,6 +216,13 @@ services:
       retries: 3
       start_period: 30s
     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prometheus.entrypoints=http"
+      - "traefik.http.routers.prometheus-secure.rule=Host(`prometheus.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prometheus-secure.entrypoints=https"
+      - "traefik.http.routers.prometheus-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.prometheus-secure.loadbalancer.server.port=9090"
       - "com.example.description=Prometheus Time Series Database"
       - "com.example.service=monitoring"
     logging:

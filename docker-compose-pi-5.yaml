@@ -12,6 +12,7 @@ include:
   - pi-5/docker-compose-auth.yaml
   - pi-5/docker-compose-monitoring.yaml
   - pi-5/docker-compose-utils.yaml
+  - pi-5/docker-compose-reverse-proxy.yaml
 
 services:
   homepage:
@@ -29,7 +30,17 @@ services:
       - ${SERVICES_ROOT}/homepage/config:/app/config:rw
       - /mnt/Movies:/mnt/Movies:ro
       - /mnt/Series:/mnt/Series:ro
+    expose:
+      - 80
     networks:
       homelab_vlan:
         ipv4_address: 192.168.1.200
       homelab:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`homepage.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.homepage.entrypoints=http"
+      - "traefik.http.routers.homepage-secure.rule=Host(`homepage.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.homepage-secure.entrypoints=https"
+      - "traefik.http.routers.homepage-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.homepage-secure.loadbalancer.server.port=80"
