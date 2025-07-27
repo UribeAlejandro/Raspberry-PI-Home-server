@@ -15,17 +15,17 @@ services:
       unbound:
         condition: service_healthy
     user: "${PUID}:${PGID}"
-#    ports:
-#      # Plain DNS
-#      - 53:53/tcp
-#      - 53:53/udp
-#      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
-#      - 80:80/tcp
-#      - 443:443/tcp
-#      - 443:443/udp
-#      - 2000:3000/tcp
-#      # DNS-over-TLS
-#      - 853:853/tcp
+    #    ports:
+    #      # Plain DNS
+    #      - 53:53/tcp
+    #      - 53:53/udp
+    #      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
+    #      - 80:80/tcp
+    #      - 443:443/tcp
+    #      - 443:443/udp
+    #      - 2000:3000/tcp
+    #      # DNS-over-TLS
+    #      - 853:853/tcp
     volumes:
       - ${SERVICES_ROOT}/adguardhome/work:/opt/adguardhome/work
       - ${SERVICES_ROOT}/adguardhome/config:/opt/adguardhome/conf
@@ -34,3 +34,12 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.253
       homelab:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adguard.rule=Host(`adguard.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.adguard.entrypoints=http"
+      - "traefik.http.routers.adguard-secure.rule=Host(`adguard.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.adguard-secure.entrypoints=https"
+      - "traefik.http.routers.adguard-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.adguard-secure.loadbalancer.server.port=80"
+      - "traefik.docker.network=homelab_vlan"

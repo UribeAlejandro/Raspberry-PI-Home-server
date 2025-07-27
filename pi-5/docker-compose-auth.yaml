@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       start_period: 20s
       interval: 30s
       retries: 5
@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
       start_period: 20s
       interval: 30s
       retries: 5
@@ -63,9 +63,9 @@ services:
     volumes:
       - ${SERVICES_ROOT}/authentik/media:/media
       - ${SERVICES_ROOT}/authentik/custom-templates:/templates
-    ports:
-      - 9500:9000
-      - 9443:9443
+    expose:
+      - 9000
+      - 9443
     depends_on:
       authentik-postgresql:
         condition: service_healthy
@@ -73,6 +73,14 @@ services:
         condition: service_healthy
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`authentik.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.authentik.entrypoints=http"
+      - "traefik.http.routers.authentik-secure.rule=Host(`authentik.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.authentik-secure.entrypoints=https"
+      - "traefik.http.routers.authentik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.authentik-secure.loadbalancer.server.port=9000"
 
   authentik-worker:
     hostname: authentik-worker
