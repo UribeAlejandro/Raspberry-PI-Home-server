@@ -12,14 +12,22 @@ services:
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
-    ports:
-      - 9000:9000
+    expose:
+      - 9000
     volumes:
       - /etc/localtime:/etc/localtime
       - /var/run/docker.sock:/var/run/docker.sock
       - ${SERVICES_ROOT}/portainer:/data
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.portainer.entrypoints=http"
+      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.portainer-secure.entrypoints=https"
+      - "traefik.http.routers.portainer-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
 
   samba:
     hostname: samba
@@ -64,8 +72,16 @@ services:
     volumes:
       - ~/Documents:/workspace
       - ${SERVICES_ROOT}/code-server/config:/config
-    ports:
-      - 5443:8443
+    expose:
+      - 8443
     restart: unless-stopped
     networks:
       - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.code.rule=Host(`code.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.code.entrypoints=http"
+      - "traefik.http.routers.code-secure.rule=Host(`code.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.code-secure.entrypoints=https"
+      - "traefik.http.routers.code-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.code-secure.loadbalancer.server.port=8443"

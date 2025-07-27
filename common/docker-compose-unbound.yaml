@@ -20,6 +20,8 @@ services:
       EXTENDED_HEALTHCHECK: true
       EXTENDED_HEALTHCHECK_DOMAIN: "google.com"
       ENABLE_STATS: true
+    expose:
+      - 5335
     volumes:
       - ./unbound/healthcheck.sh:/healthcheck.sh:ro
       - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
