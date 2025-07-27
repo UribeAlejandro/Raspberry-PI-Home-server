@@ -13,6 +13,7 @@ include:
   - pi-5/docker-compose-monitoring.yaml
   - pi-5/docker-compose-utils.yaml
   - pi-5/docker-compose-reverse-proxy.yaml
+  - pi-5/docker-compose-marreta.yaml
 
 services:
   homepage:
@@ -27,6 +28,7 @@ services:
       LOG_LEVEL: info
       HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS}
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ${SERVICES_ROOT}/homepage/config:/app/config:rw
       - /mnt/Movies:/mnt/Movies:ro
       - /mnt/Series:/mnt/Series:ro
