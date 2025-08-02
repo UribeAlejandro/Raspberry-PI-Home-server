@@ -13,6 +13,7 @@ include:
   - pi-5/docker-compose-monitoring.yaml
   - pi-5/docker-compose-utils.yaml
   - pi-5/docker-compose-reverse-proxy.yaml
+  - pi-5/docker-compose-immich.yaml
 
 services:
   homepage:
