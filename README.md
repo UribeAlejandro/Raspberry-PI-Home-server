@@ -20,7 +20,16 @@ docker network create -d macvlan \
   --subnet=192.168.1.0/24 \
   --ip-range=192.168.1.0/24 \
   --gateway=192.168.1.1 \
+  --ipv6 \
   -o parent=eth0 homelab_vlan
+```
+
+```bash
+docker network create -d bridge \
+  --subnet=172.20.0.0/24 \
+  --gateway=172.20.0.1 \
+  --ipv6 \
+  homelab_dns
 ```
 
 ```bash
