@@ -3,11 +3,11 @@ networks:
     external: true
   homelab_vlan:
     external: true
+  homelab_dns:
+    external: true
 
 include:
   - common/docker-compose-unbound.yaml
-
-name: Raspberry Pi Zero 2W Services
 
 services:
   pihole:
@@ -27,7 +27,7 @@ services:
       PIHOLE_UID: ${PUID}
       PIHOLE_GID: ${PGID}
       TAIL_FTL_LOG: 1
-      FTLCONF_dns_upstreams: 172.25.0.28#5335
+      FTLCONF_dns_upstreams: 172.20.0.5#5335
       FTLCONF_dns_cache_size: ${DNS_CACHE_SIZE}
       FTLCONF_webserver_api_password: ${PASSWORD}
       FTLCONF_dns_listeningMode: ${DNS_LISTENING_MODE}

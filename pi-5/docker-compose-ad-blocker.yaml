@@ -4,8 +4,6 @@ networks:
   homelab:
     external: true
 
-name: AdGuard Home and Sync
-
 services:
   adguardhome:
     hostname: adguardhome
@@ -34,6 +32,7 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.253
       homelab:
+      homelab_dns:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adguard.rule=Host(`adguard.local.${DOMAIN_NAME}`)"

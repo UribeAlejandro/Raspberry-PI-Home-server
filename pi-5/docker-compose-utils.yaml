@@ -4,8 +4,6 @@ networks:
   homelab:
     external: true
 
-name: Utility Services
-
 services:
   portainer:
     hostname: portainer

@@ -24,8 +24,6 @@ volumes:
       - "com.example.description=Prometheus Persistent Data"
       - "com.example.service=monitoring"
 
-name: Monitoring and Analytics
-
 services:
   speedtest-tracker:
     hostname: speedtest

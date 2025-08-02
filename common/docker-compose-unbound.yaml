@@ -1,11 +1,11 @@
 networks:
   homelab:
     external: true
+  homelab_dns:
+    external: true
 
 volumes:
   cachedb.d:
-
-name: Unbound DNS Resolver with Redis Cache
 
 services:
   unbound:
@@ -41,8 +41,8 @@ services:
       start_period: 5s
       timeout: 15s
     networks:
-      homelab:
-        ipv4_address: 172.25.0.28
+      homelab_dns:
+        ipv4_address: 172.20.0.5
 
   unbound-db-socket:
     image: busybox
