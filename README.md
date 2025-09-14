@@ -4,6 +4,8 @@ This repository contains the configuration files and scripts for my Raspberry Pi
 
 ## Installation
 
+### Prerequisites
+
 Install the required packages:
 
 ```bash
@@ -11,7 +13,11 @@ chmod +x install.sh
 sh install.sh
 ```
 
-Wait for the Raspberry Pi to reboot. Then, create the required networks for docker:
+Wait for the Raspberry Pi to reboot. 
+
+### Network Configuration
+
+Then, create the required networks for docker:
 
 ```bash
 docker network create -d macvlan \
@@ -35,7 +41,16 @@ docker network create -d bridge \
   homelab
 ```
 
-Finally, clone this repository to the Raspberry Pi.
+### Reverse Proxy Configuration
+
+Copy the `pi-5/traefik/` folder to `${SERVICES_ROOT}/traefik/`, as follows:
+
+```bash
+mkdir -p ${SERVICES_ROOT}/traefik/
+cp -r pi-5/traefik/* ${SERVICES_ROOT}/traefik/
+```
+
+Then, modify the `traefik.yml` file to set the correct `email` and `domain name` values.
 
 ## Secrets
 
