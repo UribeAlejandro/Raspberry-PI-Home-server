@@ -16,11 +16,6 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.203
       homelab:
-      # ports:
-      # - 80:80
-      # - 443:443
-      # - 443:443/tcp # Uncomment if you want HTTP3
-      # - 443:443/udp # Uncomment if you want HTTP3
     environment:
       CF_DNS_API_TOKEN: ${TRAEFIK_CLOUDFLARED_TOKEN}
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
@@ -32,6 +27,7 @@ services:
       - ./traefik/config.yml:/config.yml:ro
     labels:
       - "traefik.enable=true"
+      - "traefik.port=80"
       - "traefik.http.routers.traefik.entrypoints=http"
       - "traefik.http.routers.traefik.rule=Host(`traefik.local.${DOMAIN_NAME}`)"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
