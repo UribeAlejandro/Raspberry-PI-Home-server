@@ -11,16 +11,13 @@ chmod +x install.sh
 sh install.sh
 ```
 
-Wait for the Raspberry Pi to reboot.
-
-Create the required networks for docker:
+Wait for the Raspberry Pi to reboot. Then, create the required networks for docker:
 
 ```bash
 docker network create -d macvlan \
   --subnet=192.168.1.0/24 \
   --ip-range=192.168.1.0/24 \
   --gateway=192.168.1.1 \
-  --ipv6 \
   -o parent=eth0 homelab_vlan
 ```
 
@@ -28,7 +25,6 @@ docker network create -d macvlan \
 docker network create -d bridge \
   --subnet=172.20.0.0/24 \
   --gateway=172.20.0.1 \
-  --ipv6 \
   homelab_dns
 ```
 
@@ -52,7 +48,7 @@ Run `docker-compose -f [filename] up -d` to start the services.
 Test the `unbound` service by running:
 
 ```bash
-dig www.google.com @172.25.0.28 -p 5335
+dig www.google.com @172.25.0.5
 ```
 
 Install `dns-utils` if needed:

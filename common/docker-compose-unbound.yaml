@@ -4,82 +4,13 @@ networks:
   homelab_dns:
     external: true
 
-volumes:
-  cachedb.d:
-
 services:
   unbound:
     hostname: unbound
     container_name: unbound
-    image: madnuttah/unbound:latest
-    environment:
-      TZ: ${TZ}
-      UNBOUND_UID: ${PUID}
-      UNBOUND_GID: ${PGID}
-      HEALTHCHECK_PORT: 5335
-      EXTENDED_HEALTHCHECK: true
-      EXTENDED_HEALTHCHECK_DOMAIN: "google.com"
-      ENABLE_STATS: true
+    image: mvance/unbound-rpi:latest
     expose:
-      - 5335
-    volumes:
-      - ./unbound/healthcheck.sh:/healthcheck.sh:ro
-      - ./unbound/unbound.conf:/usr/local/unbound/unbound.conf:rw
-      - ./unbound/conf.d/:/usr/local/unbound/conf.d/:rw
-      - ./unbound/log.d/unbound.log:/usr/local/unbound/log.d/unbound.log:rw
-      - ./unbound/log.d/unbound-stats.log:/usr/local/unbound/log.d/unbound-stats.log:rw
-      - ./unbound/zones.d/:/usr/local/unbound/zones.d/:rw
-      - cachedb.d:/usr/local/unbound/cachedb.d/
-    restart: always
-    depends_on:
-      unbound-db-redis:
-        condition: service_healthy
-    healthcheck:
-      test: sh /healthcheck.sh
-      interval: 60s
-      retries: 3
-      start_period: 5s
-      timeout: 15s
+      - 53
     networks:
       homelab_dns:
         ipv4_address: 172.20.0.5
-
-  unbound-db-socket:
-    image: busybox
-    container_name: unbound-db-socket
-    hostname: unbound-db-socket
-    init: true
-    tty: true
-    command: /bin/sh -c "chown -R 999:1000 /usr/local/unbound/cachedb.d/"
-    volumes:
-      - cachedb.d:/usr/local/unbound/cachedb.d/
-    networks:
-      - homelab
-
-  unbound-db-redis:
-    hostname: unbound-db-redis
-    container_name: unbound-db-redis
-    image: redis:alpine
-    command: redis-server /usr/local/etc/redis/redis.conf
-    environment:
-      TZ: ${TZ}
-    cap_add:
-      - CHOWN
-    expose:
-      - 6379
-    volumes:
-      - ./unbound-db/redis.conf:/usr/local/etc/redis/redis.conf:ro
-      - ./unbound-db/healthcheck.sh:/healthcheck.sh:ro
-      - ${SERVICES_ROOT}/unbound/redis/data:/data/
-      - cachedb.d:/usr/local/unbound/cachedb.d/
-    restart: always
-    healthcheck:
-      test: sh /healthcheck.sh
-      interval: 10s
-      retries: 3
-      start_period: 5s
-      timeout: 15s
-    depends_on:
-      - unbound-db-socket
-    networks:
-      - homelab

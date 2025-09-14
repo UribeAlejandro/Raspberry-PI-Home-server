@@ -14,9 +14,7 @@ services:
     hostname: pihole
     container_name: pihole
     image: pihole/pihole:latest
-    depends_on:
-      unbound:
-        condition: service_healthy
+    depends_on: [ unbound ]
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -27,8 +25,7 @@ services:
       PIHOLE_UID: ${PUID}
       PIHOLE_GID: ${PGID}
       TAIL_FTL_LOG: 1
-      FTLCONF_dns_upstreams: 172.20.0.5#5335
-      FTLCONF_dns_cache_size: ${DNS_CACHE_SIZE}
+      FTLCONF_dns_upstreams: 172.20.0.5
       FTLCONF_webserver_api_password: ${PASSWORD}
       FTLCONF_dns_listeningMode: ${DNS_LISTENING_MODE}
       FTLCONF_ntp_ipv4_active: ${NTP_IPV4_ACTIVE:-false}
@@ -42,7 +39,10 @@ services:
     privileged: true
     restart: unless-stopped
     networks:
-      - homelab
+      homelab_vlan:
+        ipv4_address: 192.168.1.249
+      homelab:
+      homelab_dns:
 
   portainer-agent:
     hostname: portainer-agent
