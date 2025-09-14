@@ -7,13 +7,15 @@ networks:
 include:
   - common/docker-compose-unbound.yaml
   - pi-5/docker-compose-ad-blocker.yaml
-  - pi-5/docker-compose-ai-automation.yaml
   - pi-5/docker-compose-arr.yaml
-  - pi-5/docker-compose-auth.yaml
   - pi-5/docker-compose-monitoring.yaml
   - pi-5/docker-compose-utils.yaml
   - pi-5/docker-compose-reverse-proxy.yaml
   - pi-5/docker-compose-immich.yaml
+  - pi-5/docker-compose-searx.yaml
+  # - pi-5/docker-compose-office.yaml
+  # - pi-5/docker-compose-ai-automation.yaml
+  # - pi-5/docker-compose-auth.yaml
 
 services:
   homepage:
@@ -32,6 +34,7 @@ services:
       - ${SERVICES_ROOT}/homepage/config:/app/config:rw
       - /mnt/Movies:/mnt/Movies:ro
       - /mnt/Series:/mnt/Series:ro
+      - /mnt/Immich:/mnt/Immich:ro
     expose:
       - 80
     networks:

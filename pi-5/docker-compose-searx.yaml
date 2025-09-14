@@ -1,0 +1,57 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+  homelab_dns:
+    external: true
+
+volumes:
+  valkey-cache:
+  searxng-cache:
+
+services:
+  redis:
+    container_name: redis
+    image: docker.io/valkey/valkey:8-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    networks:
+      - homelab
+    volumes:
+      - valkey-cache:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    networks:
+      - homelab
+      - homelab_dns
+    dns:
+      - 172.20.0.5
+    expose:
+      - 8080
+    volumes:
+      - ${SERVICES_ROOT}/searxng:/etc/searxng:rw
+      - searxng-cache:/var/cache/searxng:rw
+    environment:
+      SEARXNG_BASE_URL: https://searx.local.${DOMAIN_NAME}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.searx.rule=Host(`searx.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.searx.entrypoints=http"
+      - "traefik.http.routers.searx-secure.rule=Host(`searx.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.searx-secure.entrypoints=https"
+      - "traefik.http.routers.searx-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.searx-secure.loadbalancer.server.port=8080"
