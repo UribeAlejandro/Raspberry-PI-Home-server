@@ -1,0 +1,34 @@
+networks:
+  homelab_vlan:
+    external: true
+  homelab:
+    external: true
+
+services:
+  libreoffice:
+    container_name: libreoffice
+    image: lscr.io/linuxserver/libreoffice:latest
+    restart: unless-stopped
+    hostname: libreoffice
+    security_opt:
+      - seccomp:unconfined #optional
+    expose:
+      - 3000
+      - 3001
+    shm_size: "1gb"
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ${SERVICES_ROOT}/libreoffice/config:/config
+    networks:
+      - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.libreoffice.rule=Host(`libreoffice.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.libreoffice.entrypoints=http"
+      - "traefik.http.routers.libreoffice-secure.rule=Host(`libreoffice.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.libreoffice-secure.entrypoints=https"
+      - "traefik.http.routers.libreoffice-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.libreoffice-secure.loadbalancer.server.port=3000"
