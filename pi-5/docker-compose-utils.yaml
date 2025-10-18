@@ -108,3 +108,24 @@ services:
       - "traefik.http.routers.vaultwarden-secure.entrypoints=https"
       - "traefik.http.routers.vaultwarden-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.vaultwarden-secure.loadbalancer.server.port=80"
+
+  juice-shop:
+    hostname: juice-shop
+    image: bkimminich/juice-shop
+    container_name: juice-shop
+    expose:
+      - 3000
+    restart: unless-stopped
+    networks:
+      - no-internet
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=no-internet"
+      - "traefik.http.routers.juice-shop.rule=Host(`juice-shop.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.juice-shop.entrypoints=http"
+      - "traefik.http.routers.juice-shop-secure.rule=Host(`juice-shop.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.juice-shop-secure.entrypoints=https"
+      - "traefik.http.routers.juice-shop-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.juice-shop-secure.loadbalancer.server.port=3000"
