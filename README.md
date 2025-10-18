@@ -56,6 +56,12 @@ Then, modify the `traefik.yml` file to set the correct `email` and `domain name`
 
 Create a `.env` file in the root of the repository following the `.env.template` file.
 
+Create passwords for the services using the following command:
+
+```bash
+./init_env.sh
+```
+
 ## Usage
 
 Run `docker-compose -f [filename] up -d` to start the services.
