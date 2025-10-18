@@ -6,14 +6,11 @@ This repository contains the configuration files and scripts for my Raspberry Pi
 
 ### Prerequisites
 
-Install the required packages:
+Install the required software:
 
-```bash
-chmod +x install.sh
-sh install.sh
-```
-
-Wait for the Raspberry Pi to reboot. 
+- [Docker](https://docs.docker.com/)
+  - [Docker Engine](https://docs.docker.com/engine/)
+  - [Docker Compose](https://docs.docker.com/compose/)
 
 ### Network Configuration
 
