@@ -3,6 +3,8 @@ networks:
     external: true
   homelab:
     external: true
+  no-internet:
+    external: true
 
 services:
   traefik:
@@ -16,6 +18,7 @@ services:
       homelab_vlan:
         ipv4_address: 192.168.1.203
       homelab:
+      no-internet:
     environment:
       CF_DNS_API_TOKEN: ${TRAEFIK_CLOUDFLARED_TOKEN}
       TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}

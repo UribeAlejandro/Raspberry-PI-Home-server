@@ -41,6 +41,13 @@ docker network create -d bridge \
   homelab
 ```
 
+```bash
+docker network create \
+  --driver overlay \
+  --internal \
+  no-internet
+```
+
 ### Reverse Proxy Configuration
 
 Copy the `pi-5/traefik/` folder to `${SERVICES_ROOT}/traefik/`, as follows:

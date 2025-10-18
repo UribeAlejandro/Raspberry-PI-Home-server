@@ -83,3 +83,28 @@ services:
       - "traefik.http.routers.code-secure.entrypoints=https"
       - "traefik.http.routers.code-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.code-secure.loadbalancer.server.port=8443"
+
+  vaultwarden:
+    hostname: vaultwarden
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    environment:
+      DOMAIN: "https://vaultwarden.local.${DOMAIN_NAME}"
+    volumes:
+      - ${SERVICES_ROOT}/vaultwarden/:/data/
+    expose:
+      - 80
+    restart: unless-stopped
+    networks:
+      - no-internet
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=no-internet"
+      - "traefik.http.routers.vaultwarden.rule=Host(`vaultwarden.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.vaultwarden.entrypoints=http"
+      - "traefik.http.routers.vaultwarden-secure.rule=Host(`vaultwarden.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.vaultwarden-secure.entrypoints=https"
+      - "traefik.http.routers.vaultwarden-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.vaultwarden-secure.loadbalancer.server.port=80"
