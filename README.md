@@ -6,14 +6,11 @@ This repository contains the configuration files and scripts for my Raspberry Pi
 
 ### Prerequisites
 
-Install the required packages:
+Install the required software:
 
-```bash
-chmod +x install.sh
-sh install.sh
-```
-
-Wait for the Raspberry Pi to reboot. 
+- [Docker](https://docs.docker.com/)
+  - [Docker Engine](https://docs.docker.com/engine/)
+  - [Docker Compose](https://docs.docker.com/compose/)
 
 ### Network Configuration
 
@@ -66,7 +63,7 @@ Create a `.env` file in the root of the repository following the `.env.template`
 Create passwords for the services using the following command:
 
 ```bash
-./init_env.sh
+chmod +x init_env.sh && ./init_env.sh
 ```
 
 ## Usage
