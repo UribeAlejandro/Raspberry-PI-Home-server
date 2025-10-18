@@ -63,7 +63,7 @@ Create a `.env` file in the root of the repository following the `.env.template`
 Create passwords for the services using the following command:
 
 ```bash
-./init_env.sh
+chmod +x init_env.sh && ./init_env.sh
 ```
 
 ## Usage
