@@ -16,7 +16,6 @@ include:
   # - pi-5/docker-compose-nextcloud.yaml
   # - pi-5/docker-compose-office.yaml
   # - pi-5/docker-compose-ai-automation.yaml
-  # - pi-5/docker-compose-auth.yaml
 
 services:
   homepage:
