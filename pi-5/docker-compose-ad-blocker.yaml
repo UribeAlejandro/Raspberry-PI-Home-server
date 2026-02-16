@@ -60,7 +60,7 @@ services:
       FTLCONF_ntp_ipv6_active: ${NTP_IPV6_ACTIVE:-false}
       FTLCONF_ntp_sync_active: ${NTP_IPV6_ACTIVE:-false}
     volumes:
-      - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
+      - ${SERVICES_ROOT}/pihole/etc-pihole:/etc/pihole
     cap_add:
       - SYS_NICE
       - NET_BIND_SERVICE
