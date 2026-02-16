@@ -17,9 +17,9 @@ services:
       - 3001
     shm_size: "1gb"
     environment:
+      TZ: ${TZ}
       PUID: ${PUID}
       PGID: ${PGID}
-      TZ: ${TZ}
     volumes:
       - ${SERVICES_ROOT}/libreoffice/config:/config
     networks:
@@ -32,3 +32,49 @@ services:
       - "traefik.http.routers.libreoffice-secure.entrypoints=https"
       - "traefik.http.routers.libreoffice-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.libreoffice-secure.loadbalancer.server.port=3000"
+    profiles: [ rpi5 ]
+
+  nextcloud_db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    container_name: mariadb-nextcloud
+    hostname: mariadb-nextcloud
+    expose:
+      - 3306
+    volumes:
+      - /mnt/Immich/nextcloud/database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+    networks:
+      - homelab
+    profiles: [ rpi5 ]
+
+  nextcloud:
+    image: nextcloud
+    container_name: nextcloud
+    restart: unless-stopped
+    expose:
+      - 80
+    volumes:
+      - /mnt/Immich/nextcloud/data:/var/www/html
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_HOST: mariadb-nextcloud
+      TRUSTED_PROXIES: 172.25.0.0/16
+    networks:
+      - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.nextcloud.entrypoints=http"
+      - "traefik.http.routers.nextcloud-secure.rule=Host(`nextcloud.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.nextcloud-secure.entrypoints=https"
+      - "traefik.http.routers.nextcloud-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.nextcloud-secure.loadbalancer.server.port=80"
+    profiles: [ rpi5 ]

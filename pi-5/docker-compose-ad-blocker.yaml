@@ -5,6 +5,18 @@ networks:
     external: true
 
 services:
+  unbound:
+    hostname: unbound
+    container_name: unbound
+    image: mvance/unbound-rpi:latest
+    restart: always
+    ports:
+      - "5335:53"
+    networks:
+      homelab_dns:
+        ipv4_address: 172.20.0.5
+    profiles: [ rpi2w, rpi5 ]
+
   adguardhome:
     hostname: adguardhome
     container_name: adguardhome
@@ -28,3 +40,35 @@ services:
       - "traefik.http.routers.adguard-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.adguard-secure.loadbalancer.server.port=80"
       - "traefik.docker.network=homelab_vlan"
+    profiles: [ rpi5 ]
+
+  pihole:
+    hostname: pihole
+    container_name: pihole
+    image: pihole/pihole:latest
+    depends_on: [ unbound ]
+    environment:
+      TZ: ${TZ}
+      PIHOLE_UID: ${PUID}
+      PIHOLE_GID: ${PGID}
+      TAIL_FTL_LOG: 1
+      FTLCONF_dns_upstreams: 172.20.0.5
+      FTLCONF_webserver_api_password: ${PASSWORD}
+      FTLCONF_dns_listeningMode: ${DNS_LISTENING_MODE:-ALL}
+      FTLCONF_dns_interface: ${DNS_INTERFACE:-eth0}
+      FTLCONF_ntp_ipv4_active: ${NTP_IPV4_ACTIVE:-false}
+      FTLCONF_ntp_ipv6_active: ${NTP_IPV6_ACTIVE:-false}
+      FTLCONF_ntp_sync_active: ${NTP_IPV6_ACTIVE:-false}
+    volumes:
+      - ${SERVICES_ROOT}/etc-pihole:/etc/pihole
+    cap_add:
+      - SYS_NICE
+      - NET_BIND_SERVICE
+    privileged: true
+    restart: unless-stopped
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.249
+      homelab:
+      homelab_dns:
+    profiles: [ rpi2w ]

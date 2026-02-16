@@ -5,89 +5,31 @@ networks:
     external: true
 
 services:
-  plex:
-    container_name: plex
-    image: plexinc/pms-docker
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    hostname: gluetun
     restart: unless-stopped
-    hostname: plex-server-home
-    # ports:
-    #   - 32400:32400/tcp
-    #   - 3005:3005/tcp
-    #   - 8324:8324/tcp
-    #   - 32469:32469/tcp
-    #   - 1900:1900/udp
-    #   - 32410:32410/udp
-    #   - 32412:32412/udp
-    #   - 32413:32413/udp
-    #   - 32414:32414/udp
-    environment:
-      TZ: ${TZ}
-      ALLOWED_NETWORKS: 192.168.1.0/24,172.25.0.0/24
-    volumes:
-      - ${SERVICES_ROOT}/plex/config:/config
-      - ${SERVICES_ROOT}/plex/transcode:/transcode
-      - /mnt/Movies/Movies:/movies
-      - /mnt/Series/Series:/tv
-    networks:
-      homelab_vlan:
-        ipv4_address: 192.168.1.254
-      homelab:
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`plex.local.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.plex.entrypoints=http"
-      - "traefik.http.routers.plex-secure.rule=Host(`plex.local.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.plex-secure.entrypoints=https"
-      - "traefik.http.routers.plex-secure.tls.certresolver=cloudflare"
-      - "traefik.http.services.plex-secure.loadbalancer.server.port=32400"
-
-  transmission:
-    image: haugene/transmission-openvpn:latest
-    hostname: transmission
-    container_name: transmission
-    restart: unless-stopped
-    privileged: true
     cap_add:
       - NET_ADMIN
-      - CHOWN
+    devices:
+      - /dev/net/tun:/dev/net/tun
     environment:
-      TZ: ${TZ}
-      PUID: ${PUID}
-      PGID: ${PGID}
-      # Nordvpn
-      NORDVPN_COUNTRY: ${NORDVPN_COUNTRY}
-      NORDVPN_CATEGORY: ${NORDVPN_CATEGORY}
-      # Openvpn
-      OPENVPN_PROVIDER: ${OPENVPN_PROVIDER}
-      OPENVPN_USERNAME: ${OPENVPN_USERNAME}
+      VPN_TYPE: ${VPN_TYPE}
+      OPENVPN_USER: ${OPENVPN_USER}
       OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
-      # Transmission
-      TRANSMISSION_RPC_USERNAME: ${USERNAME}
-      TRANSMISSION_RPC_PASSWORD: ${PASSWORD}
-      TRANSMISSION_RPC_PORT: 9091
-      TRANSMISSION_WATCH_DIR: /data
-      TRANSMISSION_DOWNLOAD_DIR: /data
-      TRANSMISSION_INCOMPLETE_DIR: /data
-      TRANSMISSION_WATCH_DIR_ENABLED: false
-      TRANSMISSION_RPC_AUTHENTICATION_REQUIRED: true
-      TRANSMISSION_WEB_UI: transmission-web-control
-      # Other settings
-      SELFHEAL: true
-      HEALTH_CHECK_HOST: google.com
-      CREATE_TUN_DEVICE: true
-      GLOBAL_APPLY_PERMISSION: true
-      LOCAL_NETWORK: 192.168.0.0/16
-      OPENVPN_OPTS: --inactive 3600 --ping 10 --ping-exit 60
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES}
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER}
     volumes:
-      - ${SERVICES_ROOT}/transmission-openvpn:/config
-      - /etc/localtime:/etc/localtime:ro
-      - /mnt:/data
+      - ${SERVICES_ROOT}/gluetun:/gluetun
     expose:
+      - 8080
       - 9091
       - 51413
       - 51413/udp
     networks:
       - homelab
+      - homelab_dns
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.transmission.rule=Host(`transmission.local.${DOMAIN_NAME}`)"
@@ -96,6 +38,24 @@ services:
       - "traefik.http.routers.transmission-secure.entrypoints=https"
       - "traefik.http.routers.transmission-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.transmission-secure.loadbalancer.server.port=9091"
+    profiles: [ rpi5 ]
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      USER: ${USERNAME}
+      PASS: ${PASSWORD}
+    volumes:
+      - ${SERVICES_ROOT}/transmission/data:/config
+      - /mnt:/downloads
+    network_mode: "service:gluetun"
+#    expose: # Exposed in gluetun: 9091, 51413, 51413/udp
+    profiles: [ rpi5 ]
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -105,7 +65,7 @@ services:
     environment:
       TZ: ${TZ}
       LANG: en_GB
-      LOG_LEVEL: DEBUG
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:
       - ${SERVICES_ROOT}/flaresolverr:/config
     expose:
@@ -120,6 +80,7 @@ services:
       - "traefik.http.routers.flaresolverr-secure.entrypoints=https"
       - "traefik.http.routers.flaresolverr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.flaresolverr-secure.loadbalancer.server.port=8191"
+    profiles: [ rpi5 ]
 
   jackett:
     image: linuxserver/jackett:latest
@@ -130,7 +91,7 @@ services:
       TZ: ${TZ}
       PUID: ${PUID}
       PGID: ${PGID}
-      AUTO_UPDATE: true
+      AUTO_UPDATE: false
     volumes:
       - /mnt:/downloads
       - ${SERVICES_ROOT}/Jackett:/config
@@ -146,6 +107,7 @@ services:
       - "traefik.http.routers.jackett-secure.entrypoints=https"
       - "traefik.http.routers.jackett-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.jackett-secure.loadbalancer.server.port=9117"
+    profiles: [ rpi5 ]
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -158,7 +120,7 @@ services:
       PGID: ${PGID}
     volumes:
       - /mnt:/downloads
-      - /mnt/Series/Series:/tv
+      - ${SERIES}/Series:/tv
       - ${SERVICES_ROOT}/Sonarr:/config
     expose:
       - 8989
@@ -173,7 +135,7 @@ services:
       - "traefik.http.routers.sonarr-secure.entrypoints=https"
       - "traefik.http.routers.sonarr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.sonarr-secure.loadbalancer.server.port=8989"
-
+    profiles: [ rpi5 ]
 
   radarr:
     image: linuxserver/radarr:latest
@@ -186,7 +148,7 @@ services:
       PGID: ${PGID}
     volumes:
       - /mnt:/downloads
-      - /mnt/Movies/Movies:/movies
+      - ${MOVIES}/Movies:/movies
       - ${SERVICES_ROOT}/radarr/config:/config
     expose:
       - 7878
@@ -201,6 +163,7 @@ services:
       - "traefik.http.routers.radarr-secure.entrypoints=https"
       - "traefik.http.routers.radarr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.radarr-secure.loadbalancer.server.port=7878"
+    profiles: [ rpi5 ]
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -226,6 +189,7 @@ services:
       - "traefik.http.routers.prowlarr-secure.entrypoints=https"
       - "traefik.http.routers.prowlarr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.prowlarr-secure.loadbalancer.server.port=9696"
+    profiles: [ rpi5 ]
 
   bazarr:
     image: linuxserver/bazarr:latest
@@ -253,6 +217,7 @@ services:
       - "traefik.http.routers.bazarr-secure.entrypoints=https"
       - "traefik.http.routers.bazarr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.bazarr-secure.loadbalancer.server.port=6767"
+    profiles: [ rpi5 ]
 
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
@@ -278,3 +243,31 @@ services:
       - "traefik.http.routers.overseerr-secure.entrypoints=https"
       - "traefik.http.routers.overseerr-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.overseerr-secure.loadbalancer.server.port=5055"
+    profiles: [ rpi5 ]
+
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    hostname: plex-server-home
+    environment:
+      TZ: ${TZ}
+      ALLOWED_NETWORKS: 192.168.1.0/24,172.25.0.0/24
+    volumes:
+      - ${SERVICES_ROOT}/plex/config:/config
+      - ${SERVICES_ROOT}/plex/transcode:/transcode
+      - /mnt/Movies/Movies:/movies
+      - /mnt/Series/Series:/tv
+    networks:
+      homelab_vlan:
+        ipv4_address: 192.168.1.254
+      homelab:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`plex.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.plex.entrypoints=http"
+      - "traefik.http.routers.plex-secure.rule=Host(`plex.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.plex-secure.entrypoints=https"
+      - "traefik.http.routers.plex-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.plex-secure.loadbalancer.server.port=32400"
+    profiles: [ rpi5 ]
