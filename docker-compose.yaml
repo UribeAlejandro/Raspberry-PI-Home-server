@@ -9,15 +9,15 @@ networks:
     external: true
 
 include:
-  - pi-5/docker-compose-ad-blocker.yaml
-  - pi-5/docker-compose-arr.yaml
-  - pi-5/docker-compose-monitoring.yaml
-  - pi-5/docker-compose-utils.yaml
-  - pi-5/docker-compose-reverse-proxy.yaml
-  - pi-5/docker-compose-immich.yaml
-  - pi-5/docker-compose-searx.yaml
-  # - pi-5/docker-compose-office.yaml
-  # - pi-5/docker-compose-ai-automation.yaml
+  - services/docker-compose-ad-blocker.yaml
+  - services/docker-compose-arr.yaml
+  - services/docker-compose-monitoring.yaml
+  - services/docker-compose-utils.yaml
+  - services/docker-compose-reverse-proxy.yaml
+  - services/docker-compose-immich.yaml
+  - services/docker-compose-searx.yaml
+  # - services/docker-compose-office.yaml
+  # - services/docker-compose-ai-automation.yaml
 
 services:
   homepage:
