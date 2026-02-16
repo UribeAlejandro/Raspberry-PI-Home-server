@@ -38,15 +38,20 @@ services:
     healthcheck:
       disable: false
     labels:
-      traefik.enable: true
-      traefik.http.routers.immich.rule: Host(`immich.local.${DOMAIN_NAME}`)
-      traefik.http.routers.immich.entrypoints: http
-      traefik.http.routers.immich-secure.rule: Host(`immich.local.${DOMAIN_NAME}`)
-      traefik.http.routers.immich-secure.entrypoints: https
-      traefik.http.routers.immich-secure.tls.certresolver: cloudflare
-      traefik.http.services.immich-secure.loadbalancer.server.port: 2283
+      - "traefik.enable=true"
+      - "traefik.http.routers.immich.rule=Host(`immich.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.immich.entrypoints=http"
+      - "traefik.http.routers.immich-secure.rule=Host(`immich.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.immich-secure.entrypoints=https"
+      - "traefik.http.routers.immich-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.immich-secure.loadbalancer.server.port=2283"
     networks:
       - homelab
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+    profiles: [ rpi5 ]
 
   immich-machine-learning:
     hostname: immich_machine_learning
@@ -59,11 +64,16 @@ services:
       disable: false
     networks:
       - homelab
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+    profiles: [ rpi5 ]
 
   immich-redis:
     hostname: immich-redis
     container_name: immich-redis
-    image: docker.io/valkey/valkey:8-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571
+    image: docker.io/valkey/valkey:9@sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
     environment:
       TZ: ${TZ}
     healthcheck:
@@ -71,6 +81,7 @@ services:
     restart: always
     networks:
       - homelab
+    profiles: [ rpi5 ]
 
   immich-postgres:
     hostname: immich-postgres
@@ -82,10 +93,13 @@ services:
       POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
       POSTGRES_DB: ${IMMICH_DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: '--data-checksums'
-      DB_STORAGE_TYPE: 'HDD'
+      DB_STORAGE_TYPE: ${DB_STORAGE_TYPE:-HDD}
     volumes:
       - ${SERVICES_ROOT}/immich/database/:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
+    healthcheck:
+      disable: false
     networks:
       - homelab
+    profiles: [ rpi5 ]

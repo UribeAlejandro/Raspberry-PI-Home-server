@@ -45,3 +45,5 @@ services:
       - "traefik.http.routers.traefik-secure.tls.domains[0].main=local.${DOMAIN_NAME}"
       - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.local.${DOMAIN_NAME}"
       - "traefik.http.routers.traefik-secure.service=api@internal"
+      - "traefik.certificatesResolvers.cloudflare.acme.email=${CLOUDFLARED_EMAIL}"
+    profiles: [ rpi5 ]

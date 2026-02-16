@@ -3,9 +3,12 @@ networks:
     external: true
   homelab_vlan:
     external: true
+  homelab_dns:
+    external: true
+  no-internet:
+    external: true
 
 include:
-  - common/docker-compose-unbound.yaml
   - pi-5/docker-compose-ad-blocker.yaml
   - pi-5/docker-compose-arr.yaml
   - pi-5/docker-compose-monitoring.yaml
@@ -13,7 +16,6 @@ include:
   - pi-5/docker-compose-reverse-proxy.yaml
   - pi-5/docker-compose-immich.yaml
   - pi-5/docker-compose-searx.yaml
-  # - pi-5/docker-compose-nextcloud.yaml
   # - pi-5/docker-compose-office.yaml
   # - pi-5/docker-compose-ai-automation.yaml
 
@@ -23,24 +25,27 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     restart: unless-stopped
-    user: "${PUID}:${PGID}"
     environment:
       TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
       PORT: 80
-      LOG_LEVEL: info
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ${SERVICES_ROOT}/homepage/config:/app/config:rw
-      - /mnt/Movies:/mnt/Movies:ro
-      - /mnt/Series:/mnt/Series:ro
-      - /mnt/Immich:/mnt/Immich:ro
+      - ${MOVIES}:${MOVIES}:ro
+      - ${SERIES}:${SERIES}:ro
+      - ${IMMICH}:${IMMICH}:ro
+      - ./img/doge.ico:/app/public/doge.ico:ro
     expose:
       - 80
     networks:
       homelab_vlan:
         ipv4_address: 192.168.1.200
       homelab:
+      no-internet:
+      homelab_dns:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homepage.rule=Host(`homepage.local.${DOMAIN_NAME}`)"
@@ -49,3 +54,4 @@ services:
       - "traefik.http.routers.homepage-secure.entrypoints=https"
       - "traefik.http.routers.homepage-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.homepage-secure.loadbalancer.server.port=80"
+    profiles: [ rpi5 ]

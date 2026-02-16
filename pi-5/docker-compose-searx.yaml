@@ -28,31 +28,42 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+    profiles: [ rpi5 ]
 
   searxng:
     container_name: searxng
     image: docker.io/searxng/searxng:latest
-    restart: unless-stopped
+    restart: on-failure:5
+    hostname: searxng
     networks:
       - homelab
       - homelab_dns
     dns:
       - 172.20.0.5
+#      - 172.20.0.6
     expose:
       - 8080
     volumes:
-      - ${SERVICES_ROOT}/searxng/settings.yml:/etc/searxng/settings.yml:ro
+#      - ${SERVICES_ROOT}/searxng/settings.yml:/etc/searxng/settings.yml
       - ${SERVICES_ROOT}/searxng/:/etc/searxng/:rw
       - searxng-cache:/var/cache/searxng:rw
     environment:
-      SEARXNG_PORT: 8080
-      SEARXNG_DEBUG: false
-      SEARXNG_METHOD: POST
-      SEARXNG_LIMITER: true
-      SEARXNG_PUBLIC_INSTANCE: false
-      SEARXNG_SECRET: GGMIH65lTOXpR1sf65aBOwIFX5t31NrU
+      SEARXNG_SECRET: ${SEARXNG_SECRET}
+      SEARXNG_PORT: ${SEARXNG_PORT:-8080}
+      SEARXNG_DEBUG: ${SEARXNG_DEBUG:-false}
+      SEARXNG_METHOD: ${SEARXNG_METHOD:-POST}
+      SEARXNG_LIMITER: ${SEARXNG_LIMITER:-true}
+      UWSGI_WORKERS: ${SEARXNG_UWSGI_WORKERS:-4}
+      UWSGI_THREADS: ${SEARXNG_UWSGI_THREADS:-4}
       SEARXNG_VALKEY_URL: valkey://redis-searxng:6379/0
       SEARXNG_BASE_URL: https://searx.local.${DOMAIN_NAME}
+      SEARXNG_PUBLIC_INSTANCE: ${SEARXNG_PUBLIC_INSTANCE:-false}
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
     logging:
       driver: "json-file"
       options:
@@ -66,3 +77,10 @@ services:
       - "traefik.http.routers.searx-secure.entrypoints=https"
       - "traefik.http.routers.searx-secure.tls.certresolver=cloudflare"
       - "traefik.http.services.searx-secure.loadbalancer.server.port=8080"
+    healthcheck:
+      test: wget --quiet --tries=1 --spider -6 http://localhost:8080/healthz || wget --quiet --tries=1 --spider -4 http://localhost:8080/healthz || exit 1
+      start_period: 30s
+      interval: 30s
+      timeout: 15s
+      retries: 3
+    profiles: [ rpi5 ]
