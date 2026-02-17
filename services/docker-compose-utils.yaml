@@ -74,6 +74,7 @@ services:
       PGID: ${PGID}
       PASSWORD: ${PASSWORD}
       PWA_APPNAME: Compumundo
+      PROXY_DOMAIN: code.${DOMAIN_NAME}
     volumes:
       - ~/Documents:/workspace
       - ${SERVICES_ROOT}/code-server/config:/config

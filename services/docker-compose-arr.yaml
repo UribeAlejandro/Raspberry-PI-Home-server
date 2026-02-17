@@ -69,6 +69,7 @@ services:
       TZ: ${TZ}
       LANG: en_GB
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      CAPTCHA_SOLVER: none
     volumes:
       - ${SERVICES_ROOT}/flaresolverr:/config
     expose:
@@ -168,6 +169,34 @@ services:
       - "traefik.http.services.radarr-secure.loadbalancer.server.port=7878"
     profiles: [ rpi5 ]
 
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    hostname: lidarr
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+    volumes:
+      - /mnt:/downloads
+      - ${MUSIC}/Music:/music
+      - ${SERVICES_ROOT}/lidarr/config:/config
+    expose:
+      - 8686
+    depends_on: [ transmission, jackett, prowlarr ]
+    restart: unless-stopped
+    networks:
+      - homelab
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lidarr.rule=Host(`lidarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.lidarr.entrypoints=http"
+      - "traefik.http.routers.lidarr-secure.rule=Host(`lidarr.local.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.lidarr-secure.entrypoints=https"
+      - "traefik.http.routers.lidarr-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.lidarr-secure.loadbalancer.server.port=8686"
+    profiles: [ rpi5 ]
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     hostname: prowlarr
@@ -259,8 +288,8 @@ services:
     volumes:
       - ${SERVICES_ROOT}/plex/config:/config
       - ${SERVICES_ROOT}/plex/transcode:/transcode
-      - /mnt/Movies/Movies:/movies
-      - /mnt/Series/Series:/tv
+      - ${MOVIES}/Movies:/movies
+      - ${SERIES}/Series:/tv
     networks:
       homelab_vlan:
         ipv4_address: 192.168.1.254
